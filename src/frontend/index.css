@@ -1,0 +1,312 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+
+    /* BOOK NOW Dark Futuristic Theme — OKLCH raw L C H values */
+    --background: 0.085 0.008 265;
+    --foreground: 0.97 0 0;
+
+    --card: 0.12 0.015 265;
+    --card-foreground: 0.97 0 0;
+
+    --popover: 0.14 0.018 265;
+    --popover-foreground: 0.97 0 0;
+
+    /* Electric Blue primary */
+    --primary: 0.58 0.22 255;
+    --primary-foreground: 0.97 0 0;
+
+    /* Dark navy secondary */
+    --secondary: 0.16 0.025 255;
+    --secondary-foreground: 0.85 0.04 255;
+
+    --muted: 0.16 0.018 265;
+    --muted-foreground: 0.58 0.03 265;
+
+    /* Electric blue accent */
+    --accent: 0.56 0.22 255;
+    --accent-foreground: 0.97 0 0;
+
+    --destructive: 0.62 0.19 22;
+    --destructive-foreground: 0.97 0 0;
+
+    --border: 0.22 0.04 255;
+    --input: 0.18 0.03 255;
+    --ring: 0.58 0.22 255;
+
+    /* Chart colors */
+    --chart-1: 0.58 0.22 255;
+    --chart-2: 0.62 0.18 185;
+    --chart-3: 0.72 0.14 140;
+    --chart-4: 0.72 0.17 45;
+    --chart-5: 0.65 0.21 22;
+
+    /* Sidebar */
+    --sidebar: 0.10 0.012 265;
+    --sidebar-foreground: 0.97 0 0;
+    --sidebar-primary: 0.58 0.22 255;
+    --sidebar-primary-foreground: 0.97 0 0;
+    --sidebar-accent: 0.16 0.025 255;
+    --sidebar-accent-foreground: 0.85 0.04 255;
+    --sidebar-border: 0.22 0.04 255;
+    --sidebar-ring: 0.58 0.22 255;
+
+    /* Custom semantic tokens */
+    --success: 0.68 0.17 170;
+    --warning: 0.72 0.17 55;
+    --info: 0.64 0.19 240;
+
+    /* Glow colors for electric blue effects */
+    --glow-primary: rgba(0, 102, 255, 0.35);
+    --glow-primary-strong: rgba(0, 102, 255, 0.6);
+    --glow-success: rgba(0, 212, 170, 0.35);
+    --glow-warning: rgba(246, 173, 85, 0.35);
+    --glow-danger: rgba(252, 129, 129, 0.35);
+  }
+
+  /* Always dark — BOOK NOW is dark-only */
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Space Grotesk', sans-serif;
+    background-image: 
+      radial-gradient(ellipse at 20% 0%, rgba(0, 102, 255, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(0, 80, 200, 0.06) 0%, transparent 50%);
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Syne', sans-serif;
+  }
+}
+
+@layer components {
+  /* Glass card effect */
+  .glass-card {
+    background: rgba(18, 20, 40, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(30, 58, 95, 0.6);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+  }
+
+  .glass-card:hover {
+    border-color: rgba(0, 102, 255, 0.4);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 24px rgba(0, 102, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    transform: translateY(-2px);
+  }
+
+  /* Glow button */
+  .btn-glow {
+    background: linear-gradient(135deg, #0066ff, #0099ff);
+    box-shadow: 0 0 20px rgba(0, 102, 255, 0.4);
+    transition: all 0.3s ease;
+  }
+
+  .btn-glow:hover {
+    box-shadow: 0 0 30px rgba(0, 102, 255, 0.7), 0 0 60px rgba(0, 102, 255, 0.3);
+    transform: translateY(-1px);
+  }
+
+  /* Electric border */
+  .electric-border {
+    border: 1px solid transparent;
+    background-clip: padding-box;
+    position: relative;
+  }
+
+  .electric-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(0, 102, 255, 0.8), rgba(0, 180, 255, 0.3), rgba(0, 80, 200, 0.8));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Hero gradient animation */
+  .hero-gradient {
+    background: linear-gradient(135deg, #0a0a1a 0%, #0d1535 30%, #0a1628 60%, #050510 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-gradient::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse at 30% 50%, rgba(0, 102, 255, 0.15) 0%, transparent 60%),
+      radial-gradient(ellipse at 70% 20%, rgba(0, 163, 255, 0.1) 0%, transparent 50%);
+    animation: heroShift 8s ease-in-out infinite alternate;
+  }
+
+  @keyframes heroShift {
+    0% { opacity: 0.7; transform: scale(1); }
+    100% { opacity: 1; transform: scale(1.05); }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(10, 10, 30, 0.5);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 102, 255, 0.4);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 102, 255, 0.7);
+  }
+
+  /* Badge variants */
+  .badge-concert { background: rgba(139, 92, 246, 0.2); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); }
+  .badge-sports { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+  .badge-conference { background: rgba(0, 102, 255, 0.2); color: #60a5fa; border: 1px solid rgba(0, 102, 255, 0.3); }
+  .badge-workshop { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+  .badge-private { background: rgba(236, 72, 153, 0.2); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.3); }
+
+  /* Status badge variants */
+  .status-pending { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+  .status-confirmed { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+  .status-cancelled { background: rgba(107, 114, 128, 0.15); color: #9ca3af; border: 1px solid rgba(107, 114, 128, 0.3); }
+  .status-refunded { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+
+  /* Grid pattern overlay */
+  .grid-overlay {
+    background-image: 
+      linear-gradient(rgba(0, 102, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 102, 255, 0.05) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+  /* Animated countdown */
+  .countdown-critical {
+    color: #fc8181;
+    animation: pulse 1s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  /* Stat card */
+  .stat-card {
+    background: rgba(15, 20, 50, 0.8);
+    border: 1px solid rgba(0, 102, 255, 0.2);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .stat-card:hover {
+    border-color: rgba(0, 102, 255, 0.5);
+    box-shadow: 0 0 20px rgba(0, 102, 255, 0.1);
+  }
+
+  /* Input glow on focus */
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+  }
+
+  /* Noise texture */
+  .noise-bg {
+    position: relative;
+  }
+  .noise-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  /* Page fade-in */
+  .page-enter {
+    animation: fadeInUp 0.4s ease forwards;
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Stagger animation */
+  .stagger-1 { animation-delay: 0.05s; }
+  .stagger-2 { animation-delay: 0.1s; }
+  .stagger-3 { animation-delay: 0.15s; }
+  .stagger-4 { animation-delay: 0.2s; }
+  .stagger-5 { animation-delay: 0.25s; }
+
+  /* ── FIX 1: Hero headline — electric gradient "NOW" text ─── */
+  .hero-headline-now {
+    background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 40%, #0ea5e9 70%, #60a5fa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 28px rgba(59, 130, 246, 0.55));
+  }
+
+  .hero-headline-book {
+    letter-spacing: -0.03em;
+    text-shadow: 0 0 80px rgba(255,255,255,0.04);
+  }
+
+  /* ── FIX 2: Event card — Book Now button glow pulse on card hover ─── */
+  .glass-card:hover .card-book-btn {
+    box-shadow: 0 0 22px rgba(0, 102, 255, 0.75), 0 0 48px rgba(0, 102, 255, 0.35);
+    transform: scale(1.04);
+  }
+
+  .card-book-btn {
+    transition: box-shadow 0.28s ease, transform 0.22s ease, background 0.2s ease;
+  }
+
+  /* ── FIX 3: Category chip — polished active + hover states ─── */
+  .filter-chip {
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+
+  .filter-chip-active {
+    background: linear-gradient(135deg, #0066ff, #0ea5e9);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 0 16px rgba(0, 102, 255, 0.5), 0 2px 8px rgba(0,0,0,0.3);
+    transform: translateY(-1px) scale(1.02);
+  }
+
+  .filter-chip-inactive {
+    background: transparent;
+    color: rgba(255,255,255,0.5);
+  }
+
+  .filter-chip-inactive:hover {
+    background: rgba(0, 102, 255, 0.1);
+    border-color: rgba(0, 102, 255, 0.5);
+    color: rgba(99, 179, 253, 1);
+    transform: translateY(-1px);
+  }
+}
