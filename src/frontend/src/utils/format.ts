@@ -46,6 +46,20 @@ export function truncate(str: string, max: number): string {
   return str.slice(0, max) + "…";
 }
 
+export function formatINR(amount: bigint): string {
+  const val = Number(amount) / 100;
+  try {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(val);
+  } catch {
+    return `₹${val.toLocaleString("en-IN")}`;
+  }
+}
+
 export function exportToCSV(data: Record<string, unknown>[], filename: string): void {
   if (!data.length) return;
   const headers = Object.keys(data[0]);

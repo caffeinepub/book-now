@@ -1,6 +1,6 @@
 import { useCurrency } from "@/hooks/useCurrency";
 import { CURRENCIES, convertPrice, formatPrice } from "@/utils/currency";
-import type { Event } from "@/backend";
+import type { Event } from "@/types";
 
 interface CurrencyBadgeProps {
   priceInSmallestUnit: bigint;

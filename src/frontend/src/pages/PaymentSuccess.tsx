@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useGetStripeSessionStatus } from "@/hooks/useQueries";
-import { CheckCircle, XCircle, Loader2, Ticket, Zap } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, Ticket, Zap, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface PaymentSuccessProps {
@@ -94,6 +94,17 @@ export default function PaymentSuccess({ onHome, onBookings }: PaymentSuccessPro
             </p>
           </div>
         )}
+
+        {/* Escrow trust badge */}
+        <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 text-left space-y-2">
+          <div className="flex items-center gap-2">
+            <Shield className="h-4 w-4 text-primary shrink-0" />
+            <p className="text-xs font-semibold text-foreground">Funds Secured in DMT CREATOLOGY Escrow</p>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Your payment is held securely until the event completes. You are fully protected.
+          </p>
+        </div>
 
         <div className="flex gap-3">
           <Button onClick={onBookings} className="flex-1 btn-glow gap-2">

@@ -1,28 +1,25 @@
-import { useGetAllTickets } from "@/hooks/useQueries";
-import { Event, Ticket, TicketType } from "@/backend";
+import { useState } from "react";
+import type { Event as BackendEvent } from "../backend.d";
+import { Ticket, TicketType } from "@/types";
 import { MockEvent, CATEGORY_COLORS, CATEGORY_LABELS, CATEGORY_GRADIENTS } from "@/utils/mockData";
 import { formatDateTime } from "@/utils/format";
-import CurrencyBadge from "@/components/CurrencyBadge";
 import { useCurrency } from "@/hooks/useCurrency";
-import { convertPrice, formatPrice } from "@/utils/currency";
 import {
   ArrowLeft,
   MapPin,
   Calendar,
   Tag,
-  Users,
-  Clock,
-  Share2,
-  Check,
   Minus,
   Plus,
+  Shield,
+  Clock,
+  Lock,
+  Zap,
 } from "lucide-react";
-import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-
-type AnyEvent = Event | MockEvent;
+import type { AnyEvent } from "@/components/EventCard";
 
 interface EventDetailProps {
   event: AnyEvent;
@@ -33,9 +30,10 @@ interface EventDetailProps {
 }
 
 const TICKET_TYPE_LABELS: Record<string, string> = {
-  numberedSeat: "Numbered Seat",
-  generalAdmission: "General Admission",
-  timeSlot: "Time Slot",
+  numberedSeat: "🪑 Numbered Seat",
+  generalAdmission: "🎟 General Admission",
+  timeSlot: "⏰ Time Slot",
+  vipPackage: "👑 VIP Package",
 };
 
 const MOCK_TICKETS: Ticket[] = [
@@ -44,7 +42,7 @@ const MOCK_TICKETS: Ticket[] = [
     eventId: "mock",
     name: "General Admission",
     ticketType: TicketType.generalAdmission,
-    price: 4900n,
+    price: 490000n,   // ₹4900 in paise
     availableQuantity: 500n,
     totalQuantity: 1000n,
     baseCurrency: "INR",
@@ -52,280 +50,324 @@ const MOCK_TICKETS: Ticket[] = [
   {
     id: "mock-ticket-vip",
     eventId: "mock",
-    name: "VIP",
+    name: "VIP Access",
     ticketType: TicketType.numberedSeat,
-    price: 14900n,
+    price: 1490000n,  // ₹14900 in paise
     availableQuantity: 50n,
     totalQuantity: 100n,
     baseCurrency: "INR",
   },
 ];
 
-export default function EventDetail({
-  event,
-  onBack,
-  onBook,
-  isAuthenticated,
-  onLoginRequired,
-}: EventDetailProps) {
+function isDemo(e: AnyEvent): e is MockEvent {
+  return "isDemo" in e && (e as MockEvent).isDemo === true;
+}
+
+// Normalise fields that differ between backend Event and MockEvent
+function getEventFields(e: AnyEvent) {
+  if (isDemo(e)) {
+    return {
+      coverImage: e.coverImage || "",
+      eventDate: e.eventDate,
+      locationStr: `${e.venue}, ${e.city}, ${e.country}`,
+      category: e.category as string,
+      description: e.description,
+      tags: e.tags ?? [],
+    };
+  }
+  const be = e as BackendEvent;
+  return {
+    coverImage: be.bannerUrl || "",
+    eventDate: be.startDate,
+    locationStr: be.location,
+    category: be.eventType as string,
+    description: be.description,
+    tags: be.tags ?? [],
+  };
+}
+
+// Build a Ticket stub from backend Event for booking flow
+function backendEventToTicket(e: BackendEvent): Ticket {
+  return {
+    id: `event-${String(e.id)}`,
+    eventId: String(e.id),
+    name: TICKET_TYPE_LABELS[e.ticketType as string] ?? "General Admission",
+    ticketType: e.ticketType as unknown as TicketType,
+    price: e.basePriceINR,
+    availableQuantity: e.availableSeats,
+    totalQuantity: e.totalSeats,
+    baseCurrency: e.baseCurrency ?? "INR",
+  };
+}
+
+export default function EventDetail({ event, onBack, onBook, isAuthenticated, onLoginRequired }: EventDetailProps) {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
-  const [copied, setCopied] = useState(false);
+  const [seatLock, _setSeatLock] = useState<{ ticketId: string; expiresAt: number } | null>(null);
 
-  const { currency } = useCurrency();
-  const { data: allTickets = [] } = useGetAllTickets();
+  const { currency, currencies, formatPrice, convertPrice } = useCurrency();
+  const currInfo = currencies[currency];
+  const demo = isDemo(event);
 
-  const isDemo = "isDemo" in event;
-  const category = event.category as string;
+  const fields = getEventFields(event);
+  const { category, coverImage, eventDate, locationStr, description, tags } = fields;
+
+  // For backend events, build a synthetic ticket from the event data
+  const tickets: Ticket[] = demo
+    ? MOCK_TICKETS
+    : [backendEventToTicket(event as BackendEvent)];
+
   const gradientClass = CATEGORY_GRADIENTS[category] ?? "from-blue-900/80 via-blue-800/60 to-indigo-900/80";
   const badgeClass = CATEGORY_COLORS[category] ?? "badge-conference";
   const categoryLabel = CATEGORY_LABELS[category] ?? category;
 
-  const tickets: Ticket[] = isDemo
-    ? MOCK_TICKETS.map((t) => ({ ...t, eventId: event.id }))
-    : (allTickets as Ticket[]).filter((t) => t.eventId === event.id);
+  const getQuantity = (ticketId: string) => quantities[ticketId] ?? 1;
 
-  const handleShare = async () => {
-    await navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    toast.success("Link copied to clipboard!");
-    setTimeout(() => setCopied(false), 2000);
+  const setQuantity = (ticketId: string, delta: number) => {
+    setQuantities((prev) => {
+      const current = prev[ticketId] ?? 1;
+      const next = Math.max(1, Math.min(10, current + delta));
+      return { ...prev, [ticketId]: next };
+    });
   };
 
   const handleBook = (ticket: Ticket) => {
     if (!isAuthenticated) {
       onLoginRequired();
+      toast.error("Please sign in to book tickets.");
       return;
     }
-    const qty = quantities[ticket.id] ?? 1;
-    onBook(event, ticket, qty);
+    onBook(event, ticket, getQuantity(ticket.id));
   };
 
-  const adjustQty = (ticketId: string, delta: number) => {
-    setQuantities((prev) => {
-      const cur = prev[ticketId] ?? 1;
-      return { ...prev, [ticketId]: Math.max(1, Math.min(10, cur + delta)) };
-    });
+  const getLockTimeLeft = () => {
+    if (!seatLock) return null;
+    const remaining = Math.max(0, seatLock.expiresAt - Date.now());
+    const mins = Math.floor(remaining / 60000);
+    const secs = Math.floor((remaining % 60000) / 1000);
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
+
+  const formatTicketPrice = (ticket: Ticket) => {
+    const converted = convertPrice(ticket.price, ticket.baseCurrency ?? "INR");
+    return formatPrice(converted, currency);
+  };
+
+  const lockTimeLeft = getLockTimeLeft();
 
   return (
-    <main className="min-h-screen pt-16 pb-16">
-      {/* Back */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 bg-transparent border-none cursor-pointer"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Events
-        </button>
-      </div>
-
-      {/* Hero */}
-      <div className={`relative h-64 sm:h-80 bg-gradient-to-br ${gradientClass} overflow-hidden`}>
-        {event.coverImage ? (
-          <img
-            src={event.coverImage}
-            alt={event.title}
-            className="absolute inset-0 w-full h-full object-cover opacity-60"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-48 h-48 rounded-full border border-white/10 opacity-20" />
-            <div className="absolute w-32 h-32 rounded-full border border-white/10 opacity-20" />
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-
-        <div className="absolute bottom-0 left-0 right-0 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${badgeClass}`}>
-              <Tag className="h-2.5 w-2.5" />
-              {categoryLabel}
-            </span>
-            {isDemo && (
-              <Badge variant="outline" className="text-[10px] border-yellow-500/40 text-yellow-400/80 bg-yellow-500/10">
-                DEMO EVENT
-              </Badge>
-            )}
-          </div>
-          <h1 className="font-display text-2xl sm:text-4xl font-bold text-foreground leading-tight">
-            {event.title}
-          </h1>
+    <main className="min-h-screen pt-16 pb-16 page-enter">
+      {/* Hero with gradient + back button */}
+      <section className={`relative bg-gradient-to-br ${gradientClass} overflow-hidden`}>
+        <div className="absolute inset-0">
+          {coverImage ? (
+            <img src={coverImage} alt={event.title} className="w-full h-full object-cover opacity-40" />
+          ) : (
+            <div className="absolute inset-0 opacity-20">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full border border-white/20" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full border border-white/15" />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent" />
         </div>
-      </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Event info */}
-            <div className="glass-card rounded-xl p-6 space-y-4">
-              <h2 className="font-display font-bold text-lg text-foreground">Event Details</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <Calendar className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Date & Time</p>
-                    <p className="text-sm font-medium text-foreground">{formatDateTime(event.eventDate)}</p>
-                  </div>
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20">
+          {/* Back button */}
+          <button
+            type="button"
+            onClick={onBack}
+            className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground bg-black/30 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2 mb-10 transition-all hover:bg-black/50 cursor-pointer"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Events
+          </button>
+
+          <div className="flex flex-col md:flex-row items-start gap-6">
+            <div className="flex-1 space-y-4">
+              {/* Category badge */}
+              <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${badgeClass}`}>
+                <Tag className="h-3 w-3" />
+                {categoryLabel}
+              </span>
+
+              {/* Title */}
+              <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-white leading-tight tracking-tight">
+                {event.title}
+              </h1>
+
+              {/* Meta */}
+              <div className="flex flex-col sm:flex-row gap-3 text-sm text-white/80">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-primary shrink-0" />
+                  <span>{formatDateTime(eventDate)}</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <MapPin className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Venue</p>
-                    <p className="text-sm font-medium text-foreground">{event.venue}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <MapPin className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Location</p>
-                    <p className="text-sm font-medium text-foreground">
-                      {event.city}, {event.country}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <Tag className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Tags</p>
-                    <p className="text-sm font-medium text-foreground">
-                      {event.tags.join(", ") || "—"}
-                    </p>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-primary shrink-0" />
+                  <span>{locationStr}</span>
                 </div>
               </div>
+
+              {/* Tags */}
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {tags.map((tag) => (
+                    <span key={tag} className="text-xs px-2.5 py-0.5 rounded-full bg-white/10 text-white/70 border border-white/10">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Main content */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left: Description */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Seat lock countdown */}
+            {lockTimeLeft && (
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-destructive/10 border border-destructive/30">
+                <Clock className="h-5 w-5 text-destructive shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-destructive">Seat Reserved — Complete Booking</p>
+                  <p className="text-xs text-destructive/80 mt-0.5">Expires in <span className="font-mono font-bold">{lockTimeLeft}</span></p>
+                </div>
+              </div>
+            )}
 
             {/* Description */}
-            <div className="glass-card rounded-xl p-6">
-              <h2 className="font-display font-bold text-lg text-foreground mb-4">About This Event</h2>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                {event.description || "No description available."}
-              </p>
+            <div className="glass-card rounded-2xl p-6">
+              <h2 className="font-display font-bold text-foreground text-lg mb-4">About This Event</h2>
+              <p className="text-foreground/80 text-sm leading-relaxed">{description}</p>
+            </div>
+
+            {/* Trust badge */}
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-primary/5 border border-primary/20">
+              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
+                <Shield className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Secured by DMT CREATOLOGY</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Your payment is held in escrow until event completion. 100% secure.
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Tickets sidebar */}
+          {/* Right: Tickets */}
           <div className="space-y-4">
-            <div className="glass-card rounded-xl p-5">
-              <h2 className="font-display font-bold text-base text-foreground mb-4 flex items-center gap-2">
-                <Users className="h-4 w-4 text-primary" />
-                Ticket Options
-              </h2>
+            <div className="glass-card rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="font-display font-bold text-foreground text-base">Select Tickets</h2>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span>{currInfo?.flag}</span>
+                  <span className="font-medium">{currency}</span>
+                </div>
+              </div>
 
-              {tickets.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No tickets available yet
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {tickets.map((ticket) => {
-                    const qty = quantities[ticket.id] ?? 1;
-                    const available = Number(ticket.availableQuantity);
-                    const isSoldOut = available <= 0;
-                    return (
-                      <div
-                        key={ticket.id}
-                        className="border border-border rounded-lg p-4 space-y-3 hover:border-primary/30 transition-colors"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <p className="font-semibold text-sm text-foreground">{ticket.name}</p>
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-primary/10 text-primary mt-1">
-                              <Clock className="h-2.5 w-2.5" />
-                              {TICKET_TYPE_LABELS[ticket.ticketType as string] ?? ticket.ticketType}
-                            </span>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-bold text-foreground">
-                              <CurrencyBadge
-                                priceInSmallestUnit={ticket.price}
-                                baseCurrency={ticket.baseCurrency ?? "INR"}
-                                event={isDemo ? undefined : (event as Event)}
-                              />
-                            </p>
-                            <p className="text-[10px] text-muted-foreground">
-                              {isSoldOut ? "SOLD OUT" : `${available} left`}
-                            </p>
-                          </div>
+              <div className="space-y-3">
+                {tickets.map((ticket) => {
+                  const qty = getQuantity(ticket.id);
+                  const available = Number(ticket.availableQuantity);
+                  const isSoldOut = available === 0;
+
+                  return (
+                    <div
+                      key={ticket.id}
+                      className={`border rounded-xl p-4 space-y-3 transition-all ${
+                        isSoldOut ? "opacity-50 border-border/30" : "border-border hover:border-primary/40"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="font-semibold text-foreground text-sm">{ticket.name}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {TICKET_TYPE_LABELS[ticket.ticketType as string] ?? ticket.ticketType}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="font-bold text-foreground text-base">{formatTicketPrice(ticket)}</p>
+                          <p className="text-xs text-muted-foreground">per ticket</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <span className={`w-1.5 h-1.5 rounded-full ${isSoldOut ? "bg-destructive" : "bg-green-400"}`} />
+                          {isSoldOut ? "Sold Out" : `${available.toLocaleString()} left`}
                         </div>
 
                         {!isSoldOut && (
                           <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-2 border border-border rounded-lg overflow-hidden">
-                              <button
-                                type="button"
-                                onClick={() => adjustQty(ticket.id, -1)}
-                                className="p-1.5 hover:bg-secondary/60 transition-colors text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer"
-                              >
-                                <Minus className="h-3.5 w-3.5" />
-                              </button>
-                              <span className="text-sm font-bold text-foreground min-w-8 text-center">
-                                {qty}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => adjustQty(ticket.id, 1)}
-                                className="p-1.5 hover:bg-secondary/60 transition-colors text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer"
-                              >
-                                <Plus className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                            <Button
-                              onClick={() => handleBook(ticket)}
-                              className="flex-1 btn-glow text-xs font-bold h-8"
-                              size="sm"
+                            <button
+                              type="button"
+                              onClick={() => setQuantity(ticket.id, -1)}
+                              className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center border border-border hover:border-primary/40 transition-colors cursor-pointer"
                             >
-                              Reserve · {formatPrice(
-                                convertPrice(ticket.price * BigInt(qty), ticket.baseCurrency ?? "INR", currency),
-                                currency
-                              )}
-                            </Button>
+                              <Minus className="h-3 w-3" />
+                            </button>
+                            <span className="text-sm font-bold text-foreground w-4 text-center">{qty}</span>
+                            <button
+                              type="button"
+                              onClick={() => setQuantity(ticket.id, 1)}
+                              className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center border border-border hover:border-primary/40 transition-colors cursor-pointer"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </button>
                           </div>
                         )}
-
-                        {isSoldOut && (
-                          <Button disabled className="w-full h-8 text-xs">
-                            Sold Out
-                          </Button>
-                        )}
                       </div>
-                    );
-                  })}
+
+                      {!isSoldOut && (
+                        <Button
+                          onClick={() => handleBook(ticket)}
+                          className="w-full btn-glow gap-2 text-sm"
+                        >
+                          <Zap className="h-4 w-4" />
+                          Book {qty} Ticket{qty !== 1 ? "s" : ""} · {formatPrice(convertPrice(ticket.price, ticket.baseCurrency ?? "INR") * qty)}
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {!isAuthenticated && (
+                <div className="mt-4 p-3 rounded-xl bg-secondary/40 border border-border text-center">
+                  <p className="text-xs text-muted-foreground">
+                    <button type="button" onClick={onLoginRequired} className="text-primary hover:underline cursor-pointer bg-transparent border-none font-medium">
+                      Sign in
+                    </button>{" "}
+                    to book tickets
+                  </p>
                 </div>
               )}
             </div>
 
-            {/* Share */}
-            <button
-              type="button"
-              onClick={handleShare}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-border hover:border-primary/30 text-sm text-muted-foreground hover:text-foreground transition-all bg-transparent cursor-pointer"
-            >
-              {copied ? <Check className="h-4 w-4 text-green-400" /> : <Share2 className="h-4 w-4" />}
-              {copied ? "Link Copied!" : "Share Event"}
-            </button>
-
-            {!isAuthenticated && (
-              <div className="glass-card rounded-xl p-4 text-center">
-                <p className="text-xs text-muted-foreground mb-3">
-                  Sign in to book tickets and manage your orders
-                </p>
-                <Button onClick={onLoginRequired} className="btn-glow w-full text-sm" size="sm">
-                  Sign In to Book
-                </Button>
+            {/* 2-min booking badge */}
+            <div className="flex items-center gap-3 p-3.5 rounded-xl bg-primary/5 border border-primary/20">
+              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+                <Clock className="h-4 w-4 text-primary" />
               </div>
-            )}
+              <div>
+                <p className="text-xs font-bold text-foreground">Booking in 2 Minutes</p>
+                <p className="text-[11px] text-muted-foreground">Fastest seat reservation guaranteed</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-3.5 rounded-xl bg-green-500/5 border border-green-500/20">
+              <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center shrink-0">
+                <Lock className="h-4 w-4 text-green-400" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-foreground">Escrow Protected</p>
+                <p className="text-[11px] text-muted-foreground">Funds held by DMT CREATOLOGY</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useInternetIdentity } from "@/hooks/useInternetIdentity";
 import { useQueryClient } from "@tanstack/react-query";
-import { UserProfile, AppUserRole } from "@/backend";
+import { UserProfile, AppUserRole } from "@/types";
 import {
   Zap,
   Search,
@@ -144,6 +144,22 @@ export default function Navbar({
               Events
             </button>
 
+            <button
+              type="button"
+              onClick={() => onNavigate("home")}
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none cursor-pointer"
+            >
+              Artists
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onNavigate("home")}
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none cursor-pointer"
+            >
+              Luxury
+            </button>
+
             {/* Categories Dropdown */}
             <div className="relative">
               <button
@@ -151,7 +167,7 @@ export default function Navbar({
                 onClick={() => setCatOpen(!catOpen)}
                 className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none cursor-pointer"
               >
-                Categories
+                VIP
                 <ChevronDown
                   className={`h-3.5 w-3.5 transition-transform ${catOpen ? "rotate-180" : ""}`}
                 />

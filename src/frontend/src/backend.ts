@@ -89,12 +89,22 @@ export class ExternalBlob {
         return this;
     }
 }
+export interface VotingEntry {
+    id: bigint;
+    region: string;
+    voteCount: bigint;
+    createdAt: Time;
+    category: string;
+    artistName: string;
+}
 export interface AuditLog {
-    actionType: ActionType;
-    actorId: string;
-    timestamp: Time;
+    id: bigint;
+    action: string;
+    entityId: string;
+    timestamp: bigint;
     details: string;
-    targetId: string;
+    entityType: string;
+    userActor: Principal;
 }
 export interface TransformationOutput {
     status: bigint;
@@ -102,34 +112,77 @@ export interface TransformationOutput {
     headers: Array<http_header>;
 }
 export type Time = bigint;
-export interface Refund {
-    id: string;
-    status: RefundStatus;
-    bookingId: string;
+export interface User {
+    isApproved: boolean;
+    principal: Principal;
+    name: string;
     createdAt: Time;
-    amount: bigint;
-    reason: string;
+    role: UserRole;
+    email: string;
+}
+export interface Event {
+    id: bigint;
+    baseCurrency: string;
+    title: string;
+    endDate: Time;
+    isPublished: boolean;
+    basePriceINR: bigint;
+    globalRank?: bigint;
+    createdAt: Time;
+    tags: Array<string>;
+    isTop100India: boolean;
+    description: string;
+    multiCurrencyEnabled: boolean;
+    indiaRank?: bigint;
+    totalSeats: bigint;
+    updatedAt: Time;
+    isTop100Global: boolean;
+    ticketType: TicketType;
+    availableSeats: bigint;
+    vendorId: Principal;
+    promoVideoUrl: string;
+    bannerUrl: string;
+    location: string;
+    startDate: Time;
+    supportedCurrencies: Array<string>;
+    eventType: EventType;
+}
+export interface http_header {
+    value: string;
+    name: string;
+}
+export interface http_request_result {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
+}
+export interface ExchangeRates {
+    inrToAed: number;
+    inrToEur: number;
+    inrToGbp: number;
+    inrToUsd: number;
+}
+export interface ShoppingItem {
+    productName: string;
+    currency: string;
+    quantity: bigint;
+    priceInCents: bigint;
+    productDescription: string;
 }
 export interface TransformationInput {
     context: Uint8Array;
     response: http_request_result;
 }
-export interface Booking {
-    id: string;
-    status: BookingStatus;
-    eventId: string;
-    seatNumbers: Array<bigint>;
-    idempotencyKey: string;
-    ticketTypeId: string;
-    userId: string;
-    fraudScore: bigint;
+export interface AIItineraryLog {
+    id: bigint;
+    status: AIItineraryStatus;
+    eventId?: string;
+    destination: string;
+    userId: Principal;
     createdAt: Time;
-    lockToken: string;
-    totalAmount: bigint;
-    notes?: string;
-    quantity: bigint;
-    stripeSessionId: string;
-    timeSlot?: string;
+    travelDates: string;
+    itineraryData: string;
+    services: Array<string>;
 }
 export type StripeSessionStatus = {
     __kind__: "completed";
@@ -147,223 +200,168 @@ export interface StripeConfiguration {
     allowedCountries: Array<string>;
     secretKey: string;
 }
-export interface AddEventArgs {
-    id: string;
-    baseCurrency: string;
+export interface PreloadedEventProfile {
+    id: bigint;
+    eventId?: string;
     title: string;
-    country: string;
-    venue: string;
-    city: string;
-    tags: Array<string>;
-    description: string;
-    multiCurrencyEnabled: boolean;
-    coverImage: string;
-    vendorId: string;
-    category: EventCategory;
-    eventDate: Time;
-    supportedCurrencies: Array<string>;
+    basePriceINR: bigint;
+    globalRank?: bigint;
+    isTop100India: boolean;
+    indiaRank?: bigint;
+    isActive: boolean;
+    isTop100Global: boolean;
+    promoVideoUrl: string;
+    bannerUrl: string;
+    location: string;
+    eventType: EventType;
 }
-export interface CurrencyConfig {
-    eventId: string;
-    baseCurrency: string;
-    multiCurrencyEnabled: boolean;
-    updatedAt: Time;
-    supportedCurrencies: Array<string>;
-}
-export interface Event {
-    id: string;
-    status: EventStatus;
-    baseCurrency: string;
-    title: string;
-    country: string;
-    venue: string;
-    city: string;
+export interface FraudLog {
+    id: bigint;
+    flags: Array<string>;
+    status: FraudStatus;
+    bookingId: bigint;
+    userId: Principal;
     createdAt: Time;
-    tags: Array<string>;
-    description: string;
-    multiCurrencyEnabled: boolean;
-    coverImage: string;
-    vendorId: string;
-    category: EventCategory;
-    eventDate: Time;
-    supportedCurrencies: Array<string>;
+    riskScore: bigint;
 }
-export interface UpdateEventArgs {
-    id: string;
-    status: EventStatus;
-    baseCurrency: string;
-    title: string;
-    country: string;
-    venue: string;
-    city: string;
-    tags: Array<string>;
-    description: string;
-    multiCurrencyEnabled: boolean;
-    coverImage: string;
-    vendorId: string;
-    category: EventCategory;
-    eventDate: Time;
-    supportedCurrencies: Array<string>;
+export interface EscrowPayout {
+    id: bigint;
+    status: EscrowPayoutStatus;
+    eventId: bigint;
+    processedAt?: bigint;
+    adminNote?: string;
+    vendorId: Principal;
+    amountINR: bigint;
+    requestedAt: bigint;
 }
-export interface http_request_result {
-    status: bigint;
-    body: Uint8Array;
-    headers: Array<http_header>;
-}
-export interface http_header {
-    value: string;
-    name: string;
-}
-export interface ShoppingItem {
-    productName: string;
+export interface Booking {
+    id: bigint;
+    status: BookingStatus;
+    eventId: bigint;
+    userId: Principal;
+    createdAt: Time;
+    confirmedAt?: bigint;
+    cancelledAt?: bigint;
+    ticketType: TicketType;
+    totalAmountINR: bigint;
     currency: string;
     quantity: bigint;
-    priceInCents: bigint;
-    productDescription: string;
+    seatLockId: bigint;
+    bookingToken: string;
+    stripeSessionId?: string;
 }
-export interface Ticket {
-    id: string;
-    eventId: string;
-    baseCurrency: string;
-    availableQuantity: bigint;
-    name: string;
-    ticketType: TicketType;
-    price: bigint;
-    totalQuantity: bigint;
-}
-export interface VendorProfile {
-    userId: string;
-    createdAt: Time;
-    businessName: string;
-    approvalStatus: VendorApprovalStatus;
-    totalRevenue: bigint;
-}
-export interface UserProfile {
-    id: string;
-    status: UserStatus;
-    appRole: AppUserRole;
-    name: string;
-    createdAt: Time;
-    email: string;
-}
-export enum ActionType {
-    eventPublished = "eventPublished",
-    refundInitiated = "refundInitiated",
-    paymentSucceeded = "paymentSucceeded",
-    adminAction = "adminAction",
-    bookingCreated = "bookingCreated",
-    bookingConfirmed = "bookingConfirmed",
-    userRegistered = "userRegistered",
-    vendorApproved = "vendorApproved",
-    eventCreated = "eventCreated",
-    fraudHold = "fraudHold",
-    bookingCancelled = "bookingCancelled",
-    paymentFailed = "paymentFailed"
-}
-export enum AppUserRole {
-    customer = "customer",
-    superAdmin = "superAdmin",
-    vendor = "vendor"
+export enum AIItineraryStatus {
+    cancelled = "cancelled",
+    confirmed = "confirmed",
+    draft = "draft"
 }
 export enum BookingStatus {
     cancelled = "cancelled",
     pending = "pending",
     refunded = "refunded",
-    confirmed = "confirmed"
+    confirmed = "confirmed",
+    onHold = "onHold"
 }
-export enum EventCategory {
-    concert = "concert",
+export enum EscrowPayoutStatus {
+    pending = "pending",
+    released = "released",
+    rejected = "rejected"
+}
+export enum EventType {
+    dj = "dj",
     workshop = "workshop",
+    modelingAssignment = "modelingAssignment",
+    musicFestival = "musicFestival",
     privateEvent = "privateEvent",
     conference = "conference",
-    sports = "sports"
+    luxuryParty = "luxuryParty",
+    sports = "sports",
+    celebrity = "celebrity"
 }
-export enum EventStatus {
-    cancelled = "cancelled",
-    published = "published",
-    completed = "completed",
-    draft = "draft"
-}
-export enum RefundStatus {
-    pending = "pending",
-    rejected = "rejected",
-    processed = "processed"
+export enum FraudStatus {
+    autoHeld = "autoHeld",
+    cleared = "cleared",
+    flagged = "flagged"
 }
 export enum TicketType {
     numberedSeat = "numberedSeat",
+    vipPackage = "vipPackage",
     generalAdmission = "generalAdmission",
     timeSlot = "timeSlot"
 }
 export enum UserRole {
     admin = "admin",
+    customer = "customer",
+    superAdmin = "superAdmin",
+    vendor = "vendor"
+}
+export enum UserRole__1 {
+    admin = "admin",
     user = "user",
     guest = "guest"
 }
-export enum UserStatus {
-    active = "active",
-    suspended = "suspended"
-}
-export enum VendorApprovalStatus {
-    pending = "pending",
-    approved = "approved",
-    rejected = "rejected"
-}
 export interface backendInterface {
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
-    activateUser(userId: Principal): Promise<void>;
-    addEvent(args: AddEventArgs): Promise<Event>;
-    addTicket(ticket: Ticket): Promise<Ticket>;
-    approveVendor(vendorId: string): Promise<void>;
-    assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    cancelBooking(bookingId: string): Promise<void>;
-    createBooking(booking: Booking): Promise<Booking>;
+    approveVendor(vendorPrincipal: Principal): Promise<void>;
+    assignCallerUserRole(user: Principal, role: UserRole__1): Promise<void>;
+    cancelBooking(bookingId: bigint): Promise<void>;
+    confirmBooking(bookingId: bigint, stripeSessionId: string): Promise<void>;
+    createBooking(eventId: bigint, seatLockId: bigint, quantity: bigint, currency: string): Promise<bigint>;
     createCheckoutSession(items: Array<ShoppingItem>, successUrl: string, cancelUrl: string): Promise<string>;
-    createVendorProfile(businessName: string): Promise<VendorProfile>;
-    deleteEvent(eventId: string): Promise<void>;
-    deleteTicket(ticketId: string): Promise<void>;
-    getAllEvents(): Promise<Array<Event>>;
-    getAllTickets(): Promise<Array<Ticket>>;
-    getAuditLogs(startTime: Time, endTime: Time, actionType: ActionType | null): Promise<Array<AuditLog>>;
-    getBookingById(bookingId: string): Promise<Booking | null>;
-    getCallerUserProfile(): Promise<UserProfile | null>;
-    getCallerUserRole(): Promise<UserRole>;
-    getCurrencyConfig(eventId: string): Promise<CurrencyConfig | null>;
-    getEventById(eventId: string): Promise<Event | null>;
-    getFraudQueue(): Promise<Array<Booking>>;
-    getMyBookings(): Promise<Array<Booking>>;
-    getMyVendorEvents(): Promise<Array<Event>>;
-    getMyVendorStats(): Promise<{
+    createEvent(title: string, description: string, eventType: EventType, location: string, startDate: Time, endDate: Time, basePriceINR: bigint, supportedCurrencies: Array<string>, multiCurrencyEnabled: boolean, totalSeats: bigint, ticketType: TicketType, bannerUrl: string, promoVideoUrl: string, tags: Array<string>): Promise<bigint>;
+    createItinerary(eventId: string | null, destination: string, travelDates: string, services: Array<string>): Promise<bigint>;
+    createPreloadedProfile(eventId: string | null, title: string, eventType: EventType, location: string, basePriceINR: bigint, bannerUrl: string, promoVideoUrl: string, isTop100Global: boolean, isTop100India: boolean, globalRank: bigint | null, indiaRank: bigint | null): Promise<bigint>;
+    deleteEvent(eventId: bigint): Promise<void>;
+    getCallerUserProfile(): Promise<User | null>;
+    getCallerUserRole(): Promise<UserRole__1>;
+    getEvent(eventId: bigint): Promise<Event | null>;
+    getExchangeRates(): Promise<ExchangeRates>;
+    getItinerary(itineraryId: bigint): Promise<AIItineraryLog | null>;
+    getLeaderboard(region: string | null, category: string | null, limit: bigint): Promise<Array<VotingEntry>>;
+    getPlatformStats(): Promise<{
+        totalRevenueINR: bigint;
         totalEvents: bigint;
         totalBookings: bigint;
-        totalRevenue: bigint;
-    }>;
-    getPlatformStats(): Promise<{
-        confirmedBookings: bigint;
+        pendingEscrowPayouts: bigint;
         totalUsers: bigint;
-        totalRevenue: bigint;
+        activeFraudAlerts: bigint;
         totalVendors: bigint;
-        activeEvents: bigint;
     }>;
     getStripeSessionStatus(sessionId: string): Promise<StripeSessionStatus>;
-    getTicketById(ticketId: string): Promise<Ticket | null>;
-    getUserProfile(user: Principal): Promise<UserProfile | null>;
-    getVendorApprovalQueue(): Promise<Array<VendorProfile>>;
-    getVendorProfile(vendorId: string): Promise<VendorProfile | null>;
+    getUserProfile(user: Principal): Promise<User | null>;
+    getVendorStats(): Promise<{
+        bookingsCount: bigint;
+        revenueINR: bigint;
+        eventsCount: bigint;
+    }>;
     isCallerAdmin(): Promise<boolean>;
     isStripeConfigured(): Promise<boolean>;
-    processRefund(refundId: string, approve: boolean): Promise<void>;
-    rejectVendor(vendorId: string): Promise<void>;
-    requestRefund(bookingId: string, reason: string): Promise<Refund>;
-    reviewFraudBooking(bookingId: string, approve: boolean): Promise<void>;
-    saveCallerUserProfile(profile: UserProfile): Promise<void>;
-    setCurrencyConfig(config: CurrencyConfig): Promise<void>;
+    listAllBookings(): Promise<Array<Booking>>;
+    listAllUsers(): Promise<Array<User>>;
+    listAuditLogs(userActor: Principal | null, action: string | null, startTime: bigint | null, endTime: bigint | null): Promise<Array<AuditLog>>;
+    listEscrowPayouts(): Promise<Array<EscrowPayout>>;
+    listFraudLogs(): Promise<Array<FraudLog>>;
+    listMyBookings(): Promise<Array<Booking>>;
+    listMyItineraries(): Promise<Array<AIItineraryLog>>;
+    listPreloadedProfiles(): Promise<Array<PreloadedEventProfile>>;
+    listPublishedEvents(eventType: EventType | null, location: string | null, minPrice: bigint | null, maxPrice: bigint | null, isTop100Global: boolean | null, isTop100India: boolean | null): Promise<Array<Event>>;
+    lockSeat(eventId: bigint, seatNumber: string | null): Promise<string>;
+    publishEvent(eventId: bigint): Promise<void>;
+    registerUser(name: string, email: string, role: UserRole): Promise<void>;
+    rejectEscrowPayout(payoutId: bigint, adminNote: string): Promise<void>;
+    releaseEscrowPayout(payoutId: bigint, adminNote: string): Promise<void>;
+    requestEscrowPayout(eventId: bigint): Promise<bigint>;
+    reviewFraudFlag(fraudLogId: bigint, clearFlag: boolean): Promise<void>;
+    saveCallerUserProfile(name: string, email: string): Promise<void>;
+    setEventTop100(eventId: bigint, isTop100Global: boolean, isTop100India: boolean, globalRank: bigint | null, indiaRank: bigint | null): Promise<void>;
+    setExchangeRates(inrToUsd: number, inrToEur: number, inrToAed: number, inrToGbp: number): Promise<void>;
     setStripeConfiguration(config: StripeConfiguration): Promise<void>;
-    suspendUser(userId: Principal): Promise<void>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
-    updateEvent(args: UpdateEventArgs): Promise<Event>;
-    updateTicket(ticket: Ticket): Promise<Ticket>;
+    unpublishEvent(eventId: bigint): Promise<void>;
+    updateEvent(eventId: bigint, title: string, description: string, location: string, basePriceINR: bigint, bannerUrl: string, promoVideoUrl: string, tags: Array<string>): Promise<void>;
+    voteForArtist(artistName: string, category: string, region: string): Promise<void>;
 }
-import type { ActionType as _ActionType, AddEventArgs as _AddEventArgs, AppUserRole as _AppUserRole, AuditLog as _AuditLog, Booking as _Booking, BookingStatus as _BookingStatus, CurrencyConfig as _CurrencyConfig, Event as _Event, EventCategory as _EventCategory, EventStatus as _EventStatus, Refund as _Refund, RefundStatus as _RefundStatus, StripeSessionStatus as _StripeSessionStatus, Ticket as _Ticket, TicketType as _TicketType, Time as _Time, UpdateEventArgs as _UpdateEventArgs, UserProfile as _UserProfile, UserRole as _UserRole, UserStatus as _UserStatus, VendorApprovalStatus as _VendorApprovalStatus, VendorProfile as _VendorProfile } from "./declarations/backend.did.d.ts";
+import type { AIItineraryLog as _AIItineraryLog, AIItineraryStatus as _AIItineraryStatus, Booking as _Booking, BookingStatus as _BookingStatus, EscrowPayout as _EscrowPayout, EscrowPayoutStatus as _EscrowPayoutStatus, Event as _Event, EventType as _EventType, FraudLog as _FraudLog, FraudStatus as _FraudStatus, PreloadedEventProfile as _PreloadedEventProfile, StripeSessionStatus as _StripeSessionStatus, TicketType as _TicketType, Time as _Time, User as _User, UserRole as _UserRole, UserRole__1 as _UserRole__1 } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
@@ -380,49 +378,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async activateUser(arg0: Principal): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.activateUser(arg0);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.activateUser(arg0);
-            return result;
-        }
-    }
-    async addEvent(arg0: AddEventArgs): Promise<Event> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.addEvent(to_candid_AddEventArgs_n1(this._uploadFile, this._downloadFile, arg0));
-                return from_candid_Event_n5(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.addEvent(to_candid_AddEventArgs_n1(this._uploadFile, this._downloadFile, arg0));
-            return from_candid_Event_n5(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async addTicket(arg0: Ticket): Promise<Ticket> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.addTicket(to_candid_Ticket_n11(this._uploadFile, this._downloadFile, arg0));
-                return from_candid_Ticket_n15(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.addTicket(to_candid_Ticket_n11(this._uploadFile, this._downloadFile, arg0));
-            return from_candid_Ticket_n15(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async approveVendor(arg0: string): Promise<void> {
+    async approveVendor(arg0: Principal): Promise<void> {
         if (this.processError) {
             try {
                 const result = await this.actor.approveVendor(arg0);
@@ -436,21 +392,21 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async assignCallerUserRole(arg0: Principal, arg1: UserRole): Promise<void> {
+    async assignCallerUserRole(arg0: Principal, arg1: UserRole__1): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n19(this._uploadFile, this._downloadFile, arg1));
+                const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole__1_n1(this._uploadFile, this._downloadFile, arg1));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n19(this._uploadFile, this._downloadFile, arg1));
+            const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole__1_n1(this._uploadFile, this._downloadFile, arg1));
             return result;
         }
     }
-    async cancelBooking(arg0: string): Promise<void> {
+    async cancelBooking(arg0: bigint): Promise<void> {
         if (this.processError) {
             try {
                 const result = await this.actor.cancelBooking(arg0);
@@ -464,18 +420,32 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async createBooking(arg0: Booking): Promise<Booking> {
+    async confirmBooking(arg0: bigint, arg1: string): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.createBooking(to_candid_Booking_n21(this._uploadFile, this._downloadFile, arg0));
-                return from_candid_Booking_n25(this._uploadFile, this._downloadFile, result);
+                const result = await this.actor.confirmBooking(arg0, arg1);
+                return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.createBooking(to_candid_Booking_n21(this._uploadFile, this._downloadFile, arg0));
-            return from_candid_Booking_n25(this._uploadFile, this._downloadFile, result);
+            const result = await this.actor.confirmBooking(arg0, arg1);
+            return result;
+        }
+    }
+    async createBooking(arg0: bigint, arg1: bigint, arg2: bigint, arg3: string): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.createBooking(arg0, arg1, arg2, arg3);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.createBooking(arg0, arg1, arg2, arg3);
+            return result;
         }
     }
     async createCheckoutSession(arg0: Array<ShoppingItem>, arg1: string, arg2: string): Promise<string> {
@@ -492,21 +462,49 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async createVendorProfile(arg0: string): Promise<VendorProfile> {
+    async createEvent(arg0: string, arg1: string, arg2: EventType, arg3: string, arg4: Time, arg5: Time, arg6: bigint, arg7: Array<string>, arg8: boolean, arg9: bigint, arg10: TicketType, arg11: string, arg12: string, arg13: Array<string>): Promise<bigint> {
         if (this.processError) {
             try {
-                const result = await this.actor.createVendorProfile(arg0);
-                return from_candid_VendorProfile_n30(this._uploadFile, this._downloadFile, result);
+                const result = await this.actor.createEvent(arg0, arg1, to_candid_EventType_n3(this._uploadFile, this._downloadFile, arg2), arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_candid_TicketType_n5(this._uploadFile, this._downloadFile, arg10), arg11, arg12, arg13);
+                return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.createVendorProfile(arg0);
-            return from_candid_VendorProfile_n30(this._uploadFile, this._downloadFile, result);
+            const result = await this.actor.createEvent(arg0, arg1, to_candid_EventType_n3(this._uploadFile, this._downloadFile, arg2), arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_candid_TicketType_n5(this._uploadFile, this._downloadFile, arg10), arg11, arg12, arg13);
+            return result;
         }
     }
-    async deleteEvent(arg0: string): Promise<void> {
+    async createItinerary(arg0: string | null, arg1: string, arg2: string, arg3: Array<string>): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.createItinerary(to_candid_opt_n7(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.createItinerary(to_candid_opt_n7(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
+            return result;
+        }
+    }
+    async createPreloadedProfile(arg0: string | null, arg1: string, arg2: EventType, arg3: string, arg4: bigint, arg5: string, arg6: string, arg7: boolean, arg8: boolean, arg9: bigint | null, arg10: bigint | null): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.createPreloadedProfile(to_candid_opt_n7(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_EventType_n3(this._uploadFile, this._downloadFile, arg2), arg3, arg4, arg5, arg6, arg7, arg8, to_candid_opt_n8(this._uploadFile, this._downloadFile, arg9), to_candid_opt_n8(this._uploadFile, this._downloadFile, arg10));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.createPreloadedProfile(to_candid_opt_n7(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_EventType_n3(this._uploadFile, this._downloadFile, arg2), arg3, arg4, arg5, arg6, arg7, arg8, to_candid_opt_n8(this._uploadFile, this._downloadFile, arg9), to_candid_opt_n8(this._uploadFile, this._downloadFile, arg10));
+            return result;
+        }
+    }
+    async deleteEvent(arg0: bigint): Promise<void> {
         if (this.processError) {
             try {
                 const result = await this.actor.deleteEvent(arg0);
@@ -520,198 +518,98 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async deleteTicket(arg0: string): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.deleteTicket(arg0);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.deleteTicket(arg0);
-            return result;
-        }
-    }
-    async getAllEvents(): Promise<Array<Event>> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getAllEvents();
-                return from_candid_vec_n34(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getAllEvents();
-            return from_candid_vec_n34(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async getAllTickets(): Promise<Array<Ticket>> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getAllTickets();
-                return from_candid_vec_n35(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getAllTickets();
-            return from_candid_vec_n35(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async getAuditLogs(arg0: Time, arg1: Time, arg2: ActionType | null): Promise<Array<AuditLog>> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getAuditLogs(arg0, arg1, to_candid_opt_n36(this._uploadFile, this._downloadFile, arg2));
-                return from_candid_vec_n39(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getAuditLogs(arg0, arg1, to_candid_opt_n36(this._uploadFile, this._downloadFile, arg2));
-            return from_candid_vec_n39(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async getBookingById(arg0: string): Promise<Booking | null> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getBookingById(arg0);
-                return from_candid_opt_n44(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getBookingById(arg0);
-            return from_candid_opt_n44(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async getCallerUserProfile(): Promise<UserProfile | null> {
+    async getCallerUserProfile(): Promise<User | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getCallerUserProfile();
-                return from_candid_opt_n45(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n9(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getCallerUserProfile();
-            return from_candid_opt_n45(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n9(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getCallerUserRole(): Promise<UserRole> {
+    async getCallerUserRole(): Promise<UserRole__1> {
         if (this.processError) {
             try {
                 const result = await this.actor.getCallerUserRole();
-                return from_candid_UserRole_n52(this._uploadFile, this._downloadFile, result);
+                return from_candid_UserRole__1_n14(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getCallerUserRole();
-            return from_candid_UserRole_n52(this._uploadFile, this._downloadFile, result);
+            return from_candid_UserRole__1_n14(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getCurrencyConfig(arg0: string): Promise<CurrencyConfig | null> {
+    async getEvent(arg0: bigint): Promise<Event | null> {
         if (this.processError) {
             try {
-                const result = await this.actor.getCurrencyConfig(arg0);
-                return from_candid_opt_n54(this._uploadFile, this._downloadFile, result);
+                const result = await this.actor.getEvent(arg0);
+                return from_candid_opt_n16(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getCurrencyConfig(arg0);
-            return from_candid_opt_n54(this._uploadFile, this._downloadFile, result);
+            const result = await this.actor.getEvent(arg0);
+            return from_candid_opt_n16(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getEventById(arg0: string): Promise<Event | null> {
+    async getExchangeRates(): Promise<ExchangeRates> {
         if (this.processError) {
             try {
-                const result = await this.actor.getEventById(arg0);
-                return from_candid_opt_n55(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getEventById(arg0);
-            return from_candid_opt_n55(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async getFraudQueue(): Promise<Array<Booking>> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getFraudQueue();
-                return from_candid_vec_n56(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getFraudQueue();
-            return from_candid_vec_n56(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async getMyBookings(): Promise<Array<Booking>> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getMyBookings();
-                return from_candid_vec_n56(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getMyBookings();
-            return from_candid_vec_n56(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async getMyVendorEvents(): Promise<Array<Event>> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getMyVendorEvents();
-                return from_candid_vec_n34(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getMyVendorEvents();
-            return from_candid_vec_n34(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async getMyVendorStats(): Promise<{
-        totalEvents: bigint;
-        totalBookings: bigint;
-        totalRevenue: bigint;
-    }> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getMyVendorStats();
+                const result = await this.actor.getExchangeRates();
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getMyVendorStats();
+            const result = await this.actor.getExchangeRates();
+            return result;
+        }
+    }
+    async getItinerary(arg0: bigint): Promise<AIItineraryLog | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getItinerary(arg0);
+                return from_candid_opt_n24(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getItinerary(arg0);
+            return from_candid_opt_n24(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getLeaderboard(arg0: string | null, arg1: string | null, arg2: bigint): Promise<Array<VotingEntry>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getLeaderboard(to_candid_opt_n7(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n7(this._uploadFile, this._downloadFile, arg1), arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getLeaderboard(to_candid_opt_n7(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n7(this._uploadFile, this._downloadFile, arg1), arg2);
             return result;
         }
     }
     async getPlatformStats(): Promise<{
-        confirmedBookings: bigint;
+        totalRevenueINR: bigint;
+        totalEvents: bigint;
+        totalBookings: bigint;
+        pendingEscrowPayouts: bigint;
         totalUsers: bigint;
-        totalRevenue: bigint;
+        activeFraudAlerts: bigint;
         totalVendors: bigint;
-        activeEvents: bigint;
     }> {
         if (this.processError) {
             try {
@@ -730,70 +628,46 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getStripeSessionStatus(arg0);
-                return from_candid_StripeSessionStatus_n57(this._uploadFile, this._downloadFile, result);
+                return from_candid_StripeSessionStatus_n30(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getStripeSessionStatus(arg0);
-            return from_candid_StripeSessionStatus_n57(this._uploadFile, this._downloadFile, result);
+            return from_candid_StripeSessionStatus_n30(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getTicketById(arg0: string): Promise<Ticket | null> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getTicketById(arg0);
-                return from_candid_opt_n60(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getTicketById(arg0);
-            return from_candid_opt_n60(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
+    async getUserProfile(arg0: Principal): Promise<User | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getUserProfile(arg0);
-                return from_candid_opt_n45(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n9(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getUserProfile(arg0);
-            return from_candid_opt_n45(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n9(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getVendorApprovalQueue(): Promise<Array<VendorProfile>> {
+    async getVendorStats(): Promise<{
+        bookingsCount: bigint;
+        revenueINR: bigint;
+        eventsCount: bigint;
+    }> {
         if (this.processError) {
             try {
-                const result = await this.actor.getVendorApprovalQueue();
-                return from_candid_vec_n61(this._uploadFile, this._downloadFile, result);
+                const result = await this.actor.getVendorStats();
+                return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getVendorApprovalQueue();
-            return from_candid_vec_n61(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async getVendorProfile(arg0: string): Promise<VendorProfile | null> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getVendorProfile(arg0);
-                return from_candid_opt_n62(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getVendorProfile(arg0);
-            return from_candid_opt_n62(this._uploadFile, this._downloadFile, result);
+            const result = await this.actor.getVendorStats();
+            return result;
         }
     }
     async isCallerAdmin(): Promise<boolean> {
@@ -824,87 +698,269 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async processRefund(arg0: string, arg1: boolean): Promise<void> {
+    async listAllBookings(): Promise<Array<Booking>> {
         if (this.processError) {
             try {
-                const result = await this.actor.processRefund(arg0, arg1);
+                const result = await this.actor.listAllBookings();
+                return from_candid_vec_n33(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.listAllBookings();
+            return from_candid_vec_n33(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async listAllUsers(): Promise<Array<User>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.listAllUsers();
+                return from_candid_vec_n39(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.listAllUsers();
+            return from_candid_vec_n39(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async listAuditLogs(arg0: Principal | null, arg1: string | null, arg2: bigint | null, arg3: bigint | null): Promise<Array<AuditLog>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.listAuditLogs(to_candid_opt_n40(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n7(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n41(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n41(this._uploadFile, this._downloadFile, arg3));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.processRefund(arg0, arg1);
+            const result = await this.actor.listAuditLogs(to_candid_opt_n40(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n7(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n41(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n41(this._uploadFile, this._downloadFile, arg3));
             return result;
         }
     }
-    async rejectVendor(arg0: string): Promise<void> {
+    async listEscrowPayouts(): Promise<Array<EscrowPayout>> {
         if (this.processError) {
             try {
-                const result = await this.actor.rejectVendor(arg0);
+                const result = await this.actor.listEscrowPayouts();
+                return from_candid_vec_n42(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.listEscrowPayouts();
+            return from_candid_vec_n42(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async listFraudLogs(): Promise<Array<FraudLog>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.listFraudLogs();
+                return from_candid_vec_n47(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.listFraudLogs();
+            return from_candid_vec_n47(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async listMyBookings(): Promise<Array<Booking>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.listMyBookings();
+                return from_candid_vec_n33(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.listMyBookings();
+            return from_candid_vec_n33(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async listMyItineraries(): Promise<Array<AIItineraryLog>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.listMyItineraries();
+                return from_candid_vec_n52(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.listMyItineraries();
+            return from_candid_vec_n52(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async listPreloadedProfiles(): Promise<Array<PreloadedEventProfile>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.listPreloadedProfiles();
+                return from_candid_vec_n53(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.listPreloadedProfiles();
+            return from_candid_vec_n53(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async listPublishedEvents(arg0: EventType | null, arg1: string | null, arg2: bigint | null, arg3: bigint | null, arg4: boolean | null, arg5: boolean | null): Promise<Array<Event>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.listPublishedEvents(to_candid_opt_n56(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n7(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n8(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n8(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n57(this._uploadFile, this._downloadFile, arg4), to_candid_opt_n57(this._uploadFile, this._downloadFile, arg5));
+                return from_candid_vec_n58(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.listPublishedEvents(to_candid_opt_n56(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n7(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n8(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n8(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n57(this._uploadFile, this._downloadFile, arg4), to_candid_opt_n57(this._uploadFile, this._downloadFile, arg5));
+            return from_candid_vec_n58(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async lockSeat(arg0: bigint, arg1: string | null): Promise<string> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.lockSeat(arg0, to_candid_opt_n7(this._uploadFile, this._downloadFile, arg1));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.rejectVendor(arg0);
+            const result = await this.actor.lockSeat(arg0, to_candid_opt_n7(this._uploadFile, this._downloadFile, arg1));
             return result;
         }
     }
-    async requestRefund(arg0: string, arg1: string): Promise<Refund> {
+    async publishEvent(arg0: bigint): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.requestRefund(arg0, arg1);
-                return from_candid_Refund_n63(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.requestRefund(arg0, arg1);
-            return from_candid_Refund_n63(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async reviewFraudBooking(arg0: string, arg1: boolean): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.reviewFraudBooking(arg0, arg1);
+                const result = await this.actor.publishEvent(arg0);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.reviewFraudBooking(arg0, arg1);
+            const result = await this.actor.publishEvent(arg0);
             return result;
         }
     }
-    async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
+    async registerUser(arg0: string, arg1: string, arg2: UserRole): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n67(this._uploadFile, this._downloadFile, arg0));
+                const result = await this.actor.registerUser(arg0, arg1, to_candid_UserRole_n59(this._uploadFile, this._downloadFile, arg2));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n67(this._uploadFile, this._downloadFile, arg0));
+            const result = await this.actor.registerUser(arg0, arg1, to_candid_UserRole_n59(this._uploadFile, this._downloadFile, arg2));
             return result;
         }
     }
-    async setCurrencyConfig(arg0: CurrencyConfig): Promise<void> {
+    async rejectEscrowPayout(arg0: bigint, arg1: string): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.setCurrencyConfig(arg0);
+                const result = await this.actor.rejectEscrowPayout(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.setCurrencyConfig(arg0);
+            const result = await this.actor.rejectEscrowPayout(arg0, arg1);
+            return result;
+        }
+    }
+    async releaseEscrowPayout(arg0: bigint, arg1: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.releaseEscrowPayout(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.releaseEscrowPayout(arg0, arg1);
+            return result;
+        }
+    }
+    async requestEscrowPayout(arg0: bigint): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.requestEscrowPayout(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.requestEscrowPayout(arg0);
+            return result;
+        }
+    }
+    async reviewFraudFlag(arg0: bigint, arg1: boolean): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.reviewFraudFlag(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.reviewFraudFlag(arg0, arg1);
+            return result;
+        }
+    }
+    async saveCallerUserProfile(arg0: string, arg1: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.saveCallerUserProfile(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.saveCallerUserProfile(arg0, arg1);
+            return result;
+        }
+    }
+    async setEventTop100(arg0: bigint, arg1: boolean, arg2: boolean, arg3: bigint | null, arg4: bigint | null): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.setEventTop100(arg0, arg1, arg2, to_candid_opt_n8(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n8(this._uploadFile, this._downloadFile, arg4));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.setEventTop100(arg0, arg1, arg2, to_candid_opt_n8(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n8(this._uploadFile, this._downloadFile, arg4));
+            return result;
+        }
+    }
+    async setExchangeRates(arg0: number, arg1: number, arg2: number, arg3: number): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.setExchangeRates(arg0, arg1, arg2, arg3);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.setExchangeRates(arg0, arg1, arg2, arg3);
             return result;
         }
     }
@@ -922,20 +978,6 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async suspendUser(arg0: Principal): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.suspendUser(arg0);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.suspendUser(arg0);
-            return result;
-        }
-    }
     async transform(arg0: TransformationInput): Promise<TransformationOutput> {
         if (this.processError) {
             try {
@@ -950,258 +992,254 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateEvent(arg0: UpdateEventArgs): Promise<Event> {
+    async unpublishEvent(arg0: bigint): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateEvent(to_candid_UpdateEventArgs_n73(this._uploadFile, this._downloadFile, arg0));
-                return from_candid_Event_n5(this._uploadFile, this._downloadFile, result);
+                const result = await this.actor.unpublishEvent(arg0);
+                return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateEvent(to_candid_UpdateEventArgs_n73(this._uploadFile, this._downloadFile, arg0));
-            return from_candid_Event_n5(this._uploadFile, this._downloadFile, result);
+            const result = await this.actor.unpublishEvent(arg0);
+            return result;
         }
     }
-    async updateTicket(arg0: Ticket): Promise<Ticket> {
+    async updateEvent(arg0: bigint, arg1: string, arg2: string, arg3: string, arg4: bigint, arg5: string, arg6: string, arg7: Array<string>): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateTicket(to_candid_Ticket_n11(this._uploadFile, this._downloadFile, arg0));
-                return from_candid_Ticket_n15(this._uploadFile, this._downloadFile, result);
+                const result = await this.actor.updateEvent(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+                return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateTicket(to_candid_Ticket_n11(this._uploadFile, this._downloadFile, arg0));
-            return from_candid_Ticket_n15(this._uploadFile, this._downloadFile, result);
+            const result = await this.actor.updateEvent(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+            return result;
+        }
+    }
+    async voteForArtist(arg0: string, arg1: string, arg2: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.voteForArtist(arg0, arg1, arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.voteForArtist(arg0, arg1, arg2);
+            return result;
         }
     }
 }
-function from_candid_ActionType_n42(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ActionType): ActionType {
-    return from_candid_variant_n43(_uploadFile, _downloadFile, value);
-}
-function from_candid_AppUserRole_n50(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AppUserRole): AppUserRole {
-    return from_candid_variant_n51(_uploadFile, _downloadFile, value);
-}
-function from_candid_AuditLog_n40(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AuditLog): AuditLog {
-    return from_candid_record_n41(_uploadFile, _downloadFile, value);
-}
-function from_candid_BookingStatus_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _BookingStatus): BookingStatus {
-    return from_candid_variant_n28(_uploadFile, _downloadFile, value);
-}
-function from_candid_Booking_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Booking): Booking {
+function from_candid_AIItineraryLog_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AIItineraryLog): AIItineraryLog {
     return from_candid_record_n26(_uploadFile, _downloadFile, value);
 }
-function from_candid_EventCategory_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _EventCategory): EventCategory {
-    return from_candid_variant_n10(_uploadFile, _downloadFile, value);
+function from_candid_AIItineraryStatus_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AIItineraryStatus): AIItineraryStatus {
+    return from_candid_variant_n28(_uploadFile, _downloadFile, value);
 }
-function from_candid_EventStatus_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _EventStatus): EventStatus {
-    return from_candid_variant_n8(_uploadFile, _downloadFile, value);
+function from_candid_BookingStatus_n36(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _BookingStatus): BookingStatus {
+    return from_candid_variant_n37(_uploadFile, _downloadFile, value);
 }
-function from_candid_Event_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Event): Event {
-    return from_candid_record_n6(_uploadFile, _downloadFile, value);
+function from_candid_Booking_n34(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Booking): Booking {
+    return from_candid_record_n35(_uploadFile, _downloadFile, value);
 }
-function from_candid_RefundStatus_n65(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _RefundStatus): RefundStatus {
-    return from_candid_variant_n66(_uploadFile, _downloadFile, value);
+function from_candid_EscrowPayoutStatus_n45(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _EscrowPayoutStatus): EscrowPayoutStatus {
+    return from_candid_variant_n46(_uploadFile, _downloadFile, value);
 }
-function from_candid_Refund_n63(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Refund): Refund {
-    return from_candid_record_n64(_uploadFile, _downloadFile, value);
+function from_candid_EscrowPayout_n43(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _EscrowPayout): EscrowPayout {
+    return from_candid_record_n44(_uploadFile, _downloadFile, value);
 }
-function from_candid_StripeSessionStatus_n57(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _StripeSessionStatus): StripeSessionStatus {
-    return from_candid_variant_n58(_uploadFile, _downloadFile, value);
+function from_candid_EventType_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _EventType): EventType {
+    return from_candid_variant_n23(_uploadFile, _downloadFile, value);
 }
-function from_candid_TicketType_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _TicketType): TicketType {
-    return from_candid_variant_n18(_uploadFile, _downloadFile, value);
+function from_candid_Event_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Event): Event {
+    return from_candid_record_n18(_uploadFile, _downloadFile, value);
 }
-function from_candid_Ticket_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Ticket): Ticket {
-    return from_candid_record_n16(_uploadFile, _downloadFile, value);
+function from_candid_FraudLog_n48(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _FraudLog): FraudLog {
+    return from_candid_record_n49(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserProfile_n46(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserProfile): UserProfile {
-    return from_candid_record_n47(_uploadFile, _downloadFile, value);
+function from_candid_FraudStatus_n50(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _FraudStatus): FraudStatus {
+    return from_candid_variant_n51(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserRole_n52(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
-    return from_candid_variant_n53(_uploadFile, _downloadFile, value);
+function from_candid_PreloadedEventProfile_n54(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _PreloadedEventProfile): PreloadedEventProfile {
+    return from_candid_record_n55(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserStatus_n48(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserStatus): UserStatus {
-    return from_candid_variant_n49(_uploadFile, _downloadFile, value);
+function from_candid_StripeSessionStatus_n30(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _StripeSessionStatus): StripeSessionStatus {
+    return from_candid_variant_n31(_uploadFile, _downloadFile, value);
 }
-function from_candid_VendorApprovalStatus_n32(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _VendorApprovalStatus): VendorApprovalStatus {
-    return from_candid_variant_n33(_uploadFile, _downloadFile, value);
+function from_candid_TicketType_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _TicketType): TicketType {
+    return from_candid_variant_n21(_uploadFile, _downloadFile, value);
 }
-function from_candid_VendorProfile_n30(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _VendorProfile): VendorProfile {
-    return from_candid_record_n31(_uploadFile, _downloadFile, value);
+function from_candid_UserRole__1_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole__1): UserRole__1 {
+    return from_candid_variant_n15(_uploadFile, _downloadFile, value);
+}
+function from_candid_UserRole_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
+    return from_candid_variant_n13(_uploadFile, _downloadFile, value);
+}
+function from_candid_User_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _User): User {
+    return from_candid_record_n11(_uploadFile, _downloadFile, value);
+}
+function from_candid_opt_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Event]): Event | null {
+    return value.length === 0 ? null : from_candid_Event_n17(_uploadFile, _downloadFile, value[0]);
+}
+function from_candid_opt_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [bigint]): bigint | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_AIItineraryLog]): AIItineraryLog | null {
+    return value.length === 0 ? null : from_candid_AIItineraryLog_n25(_uploadFile, _downloadFile, value[0]);
 }
 function from_candid_opt_n29(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n44(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Booking]): Booking | null {
-    return value.length === 0 ? null : from_candid_Booking_n25(_uploadFile, _downloadFile, value[0]);
-}
-function from_candid_opt_n45(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
-    return value.length === 0 ? null : from_candid_UserProfile_n46(_uploadFile, _downloadFile, value[0]);
-}
-function from_candid_opt_n54(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_CurrencyConfig]): CurrencyConfig | null {
+function from_candid_opt_n38(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [bigint]): bigint | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n55(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Event]): Event | null {
-    return value.length === 0 ? null : from_candid_Event_n5(_uploadFile, _downloadFile, value[0]);
+function from_candid_opt_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_User]): User | null {
+    return value.length === 0 ? null : from_candid_User_n10(_uploadFile, _downloadFile, value[0]);
 }
-function from_candid_opt_n60(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Ticket]): Ticket | null {
-    return value.length === 0 ? null : from_candid_Ticket_n15(_uploadFile, _downloadFile, value[0]);
-}
-function from_candid_opt_n62(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_VendorProfile]): VendorProfile | null {
-    return value.length === 0 ? null : from_candid_VendorProfile_n30(_uploadFile, _downloadFile, value[0]);
-}
-function from_candid_record_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    id: string;
-    eventId: string;
-    baseCurrency: string;
-    availableQuantity: bigint;
-    name: string;
-    ticketType: _TicketType;
-    price: bigint;
-    totalQuantity: bigint;
-}): {
-    id: string;
-    eventId: string;
-    baseCurrency: string;
-    availableQuantity: bigint;
-    name: string;
-    ticketType: TicketType;
-    price: bigint;
-    totalQuantity: bigint;
-} {
-    return {
-        id: value.id,
-        eventId: value.eventId,
-        baseCurrency: value.baseCurrency,
-        availableQuantity: value.availableQuantity,
-        name: value.name,
-        ticketType: from_candid_TicketType_n17(_uploadFile, _downloadFile, value.ticketType),
-        price: value.price,
-        totalQuantity: value.totalQuantity
-    };
-}
-function from_candid_record_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    id: string;
-    status: _BookingStatus;
-    eventId: string;
-    seatNumbers: Array<bigint>;
-    idempotencyKey: string;
-    ticketTypeId: string;
-    userId: string;
-    fraudScore: bigint;
-    createdAt: _Time;
-    lockToken: string;
-    totalAmount: bigint;
-    notes: [] | [string];
-    quantity: bigint;
-    stripeSessionId: string;
-    timeSlot: [] | [string];
-}): {
-    id: string;
-    status: BookingStatus;
-    eventId: string;
-    seatNumbers: Array<bigint>;
-    idempotencyKey: string;
-    ticketTypeId: string;
-    userId: string;
-    fraudScore: bigint;
-    createdAt: Time;
-    lockToken: string;
-    totalAmount: bigint;
-    notes?: string;
-    quantity: bigint;
-    stripeSessionId: string;
-    timeSlot?: string;
-} {
-    return {
-        id: value.id,
-        status: from_candid_BookingStatus_n27(_uploadFile, _downloadFile, value.status),
-        eventId: value.eventId,
-        seatNumbers: value.seatNumbers,
-        idempotencyKey: value.idempotencyKey,
-        ticketTypeId: value.ticketTypeId,
-        userId: value.userId,
-        fraudScore: value.fraudScore,
-        createdAt: value.createdAt,
-        lockToken: value.lockToken,
-        totalAmount: value.totalAmount,
-        notes: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.notes)),
-        quantity: value.quantity,
-        stripeSessionId: value.stripeSessionId,
-        timeSlot: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.timeSlot))
-    };
-}
-function from_candid_record_n31(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    userId: string;
-    createdAt: _Time;
-    businessName: string;
-    approvalStatus: _VendorApprovalStatus;
-    totalRevenue: bigint;
-}): {
-    userId: string;
-    createdAt: Time;
-    businessName: string;
-    approvalStatus: VendorApprovalStatus;
-    totalRevenue: bigint;
-} {
-    return {
-        userId: value.userId,
-        createdAt: value.createdAt,
-        businessName: value.businessName,
-        approvalStatus: from_candid_VendorApprovalStatus_n32(_uploadFile, _downloadFile, value.approvalStatus),
-        totalRevenue: value.totalRevenue
-    };
-}
-function from_candid_record_n41(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    actionType: _ActionType;
-    actorId: string;
-    timestamp: _Time;
-    details: string;
-    targetId: string;
-}): {
-    actionType: ActionType;
-    actorId: string;
-    timestamp: Time;
-    details: string;
-    targetId: string;
-} {
-    return {
-        actionType: from_candid_ActionType_n42(_uploadFile, _downloadFile, value.actionType),
-        actorId: value.actorId,
-        timestamp: value.timestamp,
-        details: value.details,
-        targetId: value.targetId
-    };
-}
-function from_candid_record_n47(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    id: string;
-    status: _UserStatus;
-    appRole: _AppUserRole;
+function from_candid_record_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    isApproved: boolean;
+    principal: Principal;
     name: string;
     createdAt: _Time;
+    role: _UserRole;
     email: string;
 }): {
-    id: string;
-    status: UserStatus;
-    appRole: AppUserRole;
+    isApproved: boolean;
+    principal: Principal;
     name: string;
     createdAt: Time;
+    role: UserRole;
     email: string;
 } {
     return {
-        id: value.id,
-        status: from_candid_UserStatus_n48(_uploadFile, _downloadFile, value.status),
-        appRole: from_candid_AppUserRole_n50(_uploadFile, _downloadFile, value.appRole),
+        isApproved: value.isApproved,
+        principal: value.principal,
         name: value.name,
         createdAt: value.createdAt,
+        role: from_candid_UserRole_n12(_uploadFile, _downloadFile, value.role),
         email: value.email
     };
 }
-function from_candid_record_n59(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: bigint;
+    baseCurrency: string;
+    title: string;
+    endDate: _Time;
+    isPublished: boolean;
+    basePriceINR: bigint;
+    globalRank: [] | [bigint];
+    createdAt: _Time;
+    tags: Array<string>;
+    isTop100India: boolean;
+    description: string;
+    multiCurrencyEnabled: boolean;
+    indiaRank: [] | [bigint];
+    totalSeats: bigint;
+    updatedAt: _Time;
+    isTop100Global: boolean;
+    ticketType: _TicketType;
+    availableSeats: bigint;
+    vendorId: Principal;
+    promoVideoUrl: string;
+    bannerUrl: string;
+    location: string;
+    startDate: _Time;
+    supportedCurrencies: Array<string>;
+    eventType: _EventType;
+}): {
+    id: bigint;
+    baseCurrency: string;
+    title: string;
+    endDate: Time;
+    isPublished: boolean;
+    basePriceINR: bigint;
+    globalRank?: bigint;
+    createdAt: Time;
+    tags: Array<string>;
+    isTop100India: boolean;
+    description: string;
+    multiCurrencyEnabled: boolean;
+    indiaRank?: bigint;
+    totalSeats: bigint;
+    updatedAt: Time;
+    isTop100Global: boolean;
+    ticketType: TicketType;
+    availableSeats: bigint;
+    vendorId: Principal;
+    promoVideoUrl: string;
+    bannerUrl: string;
+    location: string;
+    startDate: Time;
+    supportedCurrencies: Array<string>;
+    eventType: EventType;
+} {
+    return {
+        id: value.id,
+        baseCurrency: value.baseCurrency,
+        title: value.title,
+        endDate: value.endDate,
+        isPublished: value.isPublished,
+        basePriceINR: value.basePriceINR,
+        globalRank: record_opt_to_undefined(from_candid_opt_n19(_uploadFile, _downloadFile, value.globalRank)),
+        createdAt: value.createdAt,
+        tags: value.tags,
+        isTop100India: value.isTop100India,
+        description: value.description,
+        multiCurrencyEnabled: value.multiCurrencyEnabled,
+        indiaRank: record_opt_to_undefined(from_candid_opt_n19(_uploadFile, _downloadFile, value.indiaRank)),
+        totalSeats: value.totalSeats,
+        updatedAt: value.updatedAt,
+        isTop100Global: value.isTop100Global,
+        ticketType: from_candid_TicketType_n20(_uploadFile, _downloadFile, value.ticketType),
+        availableSeats: value.availableSeats,
+        vendorId: value.vendorId,
+        promoVideoUrl: value.promoVideoUrl,
+        bannerUrl: value.bannerUrl,
+        location: value.location,
+        startDate: value.startDate,
+        supportedCurrencies: value.supportedCurrencies,
+        eventType: from_candid_EventType_n22(_uploadFile, _downloadFile, value.eventType)
+    };
+}
+function from_candid_record_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: bigint;
+    status: _AIItineraryStatus;
+    eventId: [] | [string];
+    destination: string;
+    userId: Principal;
+    createdAt: _Time;
+    travelDates: string;
+    itineraryData: string;
+    services: Array<string>;
+}): {
+    id: bigint;
+    status: AIItineraryStatus;
+    eventId?: string;
+    destination: string;
+    userId: Principal;
+    createdAt: Time;
+    travelDates: string;
+    itineraryData: string;
+    services: Array<string>;
+} {
+    return {
+        id: value.id,
+        status: from_candid_AIItineraryStatus_n27(_uploadFile, _downloadFile, value.status),
+        eventId: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.eventId)),
+        destination: value.destination,
+        userId: value.userId,
+        createdAt: value.createdAt,
+        travelDates: value.travelDates,
+        itineraryData: value.itineraryData,
+        services: value.services
+    };
+}
+function from_candid_record_n32(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     userPrincipal: [] | [string];
     response: string;
 }): {
@@ -1213,179 +1251,218 @@ function from_candid_record_n59(_uploadFile: (file: ExternalBlob) => Promise<Uin
         response: value.response
     };
 }
-function from_candid_record_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    id: string;
-    status: _EventStatus;
-    baseCurrency: string;
-    title: string;
-    country: string;
-    venue: string;
-    city: string;
+function from_candid_record_n35(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: bigint;
+    status: _BookingStatus;
+    eventId: bigint;
+    userId: Principal;
     createdAt: _Time;
-    tags: Array<string>;
-    description: string;
-    multiCurrencyEnabled: boolean;
-    coverImage: string;
-    vendorId: string;
-    category: _EventCategory;
-    eventDate: _Time;
-    supportedCurrencies: Array<string>;
+    confirmedAt: [] | [bigint];
+    cancelledAt: [] | [bigint];
+    ticketType: _TicketType;
+    totalAmountINR: bigint;
+    currency: string;
+    quantity: bigint;
+    seatLockId: bigint;
+    bookingToken: string;
+    stripeSessionId: [] | [string];
 }): {
-    id: string;
-    status: EventStatus;
-    baseCurrency: string;
-    title: string;
-    country: string;
-    venue: string;
-    city: string;
+    id: bigint;
+    status: BookingStatus;
+    eventId: bigint;
+    userId: Principal;
     createdAt: Time;
-    tags: Array<string>;
-    description: string;
-    multiCurrencyEnabled: boolean;
-    coverImage: string;
-    vendorId: string;
-    category: EventCategory;
-    eventDate: Time;
-    supportedCurrencies: Array<string>;
+    confirmedAt?: bigint;
+    cancelledAt?: bigint;
+    ticketType: TicketType;
+    totalAmountINR: bigint;
+    currency: string;
+    quantity: bigint;
+    seatLockId: bigint;
+    bookingToken: string;
+    stripeSessionId?: string;
 } {
     return {
         id: value.id,
-        status: from_candid_EventStatus_n7(_uploadFile, _downloadFile, value.status),
-        baseCurrency: value.baseCurrency,
-        title: value.title,
-        country: value.country,
-        venue: value.venue,
-        city: value.city,
+        status: from_candid_BookingStatus_n36(_uploadFile, _downloadFile, value.status),
+        eventId: value.eventId,
+        userId: value.userId,
         createdAt: value.createdAt,
-        tags: value.tags,
-        description: value.description,
-        multiCurrencyEnabled: value.multiCurrencyEnabled,
-        coverImage: value.coverImage,
+        confirmedAt: record_opt_to_undefined(from_candid_opt_n38(_uploadFile, _downloadFile, value.confirmedAt)),
+        cancelledAt: record_opt_to_undefined(from_candid_opt_n38(_uploadFile, _downloadFile, value.cancelledAt)),
+        ticketType: from_candid_TicketType_n20(_uploadFile, _downloadFile, value.ticketType),
+        totalAmountINR: value.totalAmountINR,
+        currency: value.currency,
+        quantity: value.quantity,
+        seatLockId: value.seatLockId,
+        bookingToken: value.bookingToken,
+        stripeSessionId: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.stripeSessionId))
+    };
+}
+function from_candid_record_n44(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: bigint;
+    status: _EscrowPayoutStatus;
+    eventId: bigint;
+    processedAt: [] | [bigint];
+    adminNote: [] | [string];
+    vendorId: Principal;
+    amountINR: bigint;
+    requestedAt: bigint;
+}): {
+    id: bigint;
+    status: EscrowPayoutStatus;
+    eventId: bigint;
+    processedAt?: bigint;
+    adminNote?: string;
+    vendorId: Principal;
+    amountINR: bigint;
+    requestedAt: bigint;
+} {
+    return {
+        id: value.id,
+        status: from_candid_EscrowPayoutStatus_n45(_uploadFile, _downloadFile, value.status),
+        eventId: value.eventId,
+        processedAt: record_opt_to_undefined(from_candid_opt_n38(_uploadFile, _downloadFile, value.processedAt)),
+        adminNote: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.adminNote)),
         vendorId: value.vendorId,
-        category: from_candid_EventCategory_n9(_uploadFile, _downloadFile, value.category),
-        eventDate: value.eventDate,
-        supportedCurrencies: value.supportedCurrencies
+        amountINR: value.amountINR,
+        requestedAt: value.requestedAt
     };
 }
-function from_candid_record_n64(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    id: string;
-    status: _RefundStatus;
-    bookingId: string;
+function from_candid_record_n49(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: bigint;
+    flags: Array<string>;
+    status: _FraudStatus;
+    bookingId: bigint;
+    userId: Principal;
     createdAt: _Time;
-    amount: bigint;
-    reason: string;
+    riskScore: bigint;
 }): {
-    id: string;
-    status: RefundStatus;
-    bookingId: string;
+    id: bigint;
+    flags: Array<string>;
+    status: FraudStatus;
+    bookingId: bigint;
+    userId: Principal;
     createdAt: Time;
-    amount: bigint;
-    reason: string;
+    riskScore: bigint;
 } {
     return {
         id: value.id,
-        status: from_candid_RefundStatus_n65(_uploadFile, _downloadFile, value.status),
+        flags: value.flags,
+        status: from_candid_FraudStatus_n50(_uploadFile, _downloadFile, value.status),
         bookingId: value.bookingId,
+        userId: value.userId,
         createdAt: value.createdAt,
-        amount: value.amount,
-        reason: value.reason
+        riskScore: value.riskScore
     };
 }
-function from_candid_variant_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    concert: null;
-} | {
-    workshop: null;
-} | {
-    privateEvent: null;
-} | {
-    conference: null;
-} | {
-    sports: null;
-}): EventCategory {
-    return "concert" in value ? EventCategory.concert : "workshop" in value ? EventCategory.workshop : "privateEvent" in value ? EventCategory.privateEvent : "conference" in value ? EventCategory.conference : "sports" in value ? EventCategory.sports : value;
+function from_candid_record_n55(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: bigint;
+    eventId: [] | [string];
+    title: string;
+    basePriceINR: bigint;
+    globalRank: [] | [bigint];
+    isTop100India: boolean;
+    indiaRank: [] | [bigint];
+    isActive: boolean;
+    isTop100Global: boolean;
+    promoVideoUrl: string;
+    bannerUrl: string;
+    location: string;
+    eventType: _EventType;
+}): {
+    id: bigint;
+    eventId?: string;
+    title: string;
+    basePriceINR: bigint;
+    globalRank?: bigint;
+    isTop100India: boolean;
+    indiaRank?: bigint;
+    isActive: boolean;
+    isTop100Global: boolean;
+    promoVideoUrl: string;
+    bannerUrl: string;
+    location: string;
+    eventType: EventType;
+} {
+    return {
+        id: value.id,
+        eventId: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.eventId)),
+        title: value.title,
+        basePriceINR: value.basePriceINR,
+        globalRank: record_opt_to_undefined(from_candid_opt_n19(_uploadFile, _downloadFile, value.globalRank)),
+        isTop100India: value.isTop100India,
+        indiaRank: record_opt_to_undefined(from_candid_opt_n19(_uploadFile, _downloadFile, value.indiaRank)),
+        isActive: value.isActive,
+        isTop100Global: value.isTop100Global,
+        promoVideoUrl: value.promoVideoUrl,
+        bannerUrl: value.bannerUrl,
+        location: value.location,
+        eventType: from_candid_EventType_n22(_uploadFile, _downloadFile, value.eventType)
+    };
 }
-function from_candid_variant_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    numberedSeat: null;
+function from_candid_variant_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    admin: null;
 } | {
-    generalAdmission: null;
-} | {
-    timeSlot: null;
-}): TicketType {
-    return "numberedSeat" in value ? TicketType.numberedSeat : "generalAdmission" in value ? TicketType.generalAdmission : "timeSlot" in value ? TicketType.timeSlot : value;
-}
-function from_candid_variant_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    cancelled: null;
-} | {
-    pending: null;
-} | {
-    refunded: null;
-} | {
-    confirmed: null;
-}): BookingStatus {
-    return "cancelled" in value ? BookingStatus.cancelled : "pending" in value ? BookingStatus.pending : "refunded" in value ? BookingStatus.refunded : "confirmed" in value ? BookingStatus.confirmed : value;
-}
-function from_candid_variant_n33(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    pending: null;
-} | {
-    approved: null;
-} | {
-    rejected: null;
-}): VendorApprovalStatus {
-    return "pending" in value ? VendorApprovalStatus.pending : "approved" in value ? VendorApprovalStatus.approved : "rejected" in value ? VendorApprovalStatus.rejected : value;
-}
-function from_candid_variant_n43(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    eventPublished: null;
-} | {
-    refundInitiated: null;
-} | {
-    paymentSucceeded: null;
-} | {
-    adminAction: null;
-} | {
-    bookingCreated: null;
-} | {
-    bookingConfirmed: null;
-} | {
-    userRegistered: null;
-} | {
-    vendorApproved: null;
-} | {
-    eventCreated: null;
-} | {
-    fraudHold: null;
-} | {
-    bookingCancelled: null;
-} | {
-    paymentFailed: null;
-}): ActionType {
-    return "eventPublished" in value ? ActionType.eventPublished : "refundInitiated" in value ? ActionType.refundInitiated : "paymentSucceeded" in value ? ActionType.paymentSucceeded : "adminAction" in value ? ActionType.adminAction : "bookingCreated" in value ? ActionType.bookingCreated : "bookingConfirmed" in value ? ActionType.bookingConfirmed : "userRegistered" in value ? ActionType.userRegistered : "vendorApproved" in value ? ActionType.vendorApproved : "eventCreated" in value ? ActionType.eventCreated : "fraudHold" in value ? ActionType.fraudHold : "bookingCancelled" in value ? ActionType.bookingCancelled : "paymentFailed" in value ? ActionType.paymentFailed : value;
-}
-function from_candid_variant_n49(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    active: null;
-} | {
-    suspended: null;
-}): UserStatus {
-    return "active" in value ? UserStatus.active : "suspended" in value ? UserStatus.suspended : value;
-}
-function from_candid_variant_n51(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     customer: null;
 } | {
     superAdmin: null;
 } | {
     vendor: null;
-}): AppUserRole {
-    return "customer" in value ? AppUserRole.customer : "superAdmin" in value ? AppUserRole.superAdmin : "vendor" in value ? AppUserRole.vendor : value;
+}): UserRole {
+    return "admin" in value ? UserRole.admin : "customer" in value ? UserRole.customer : "superAdmin" in value ? UserRole.superAdmin : "vendor" in value ? UserRole.vendor : value;
 }
-function from_candid_variant_n53(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     admin: null;
 } | {
     user: null;
 } | {
     guest: null;
-}): UserRole {
-    return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
+}): UserRole__1 {
+    return "admin" in value ? UserRole__1.admin : "user" in value ? UserRole__1.user : "guest" in value ? UserRole__1.guest : value;
 }
-function from_candid_variant_n58(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    numberedSeat: null;
+} | {
+    vipPackage: null;
+} | {
+    generalAdmission: null;
+} | {
+    timeSlot: null;
+}): TicketType {
+    return "numberedSeat" in value ? TicketType.numberedSeat : "vipPackage" in value ? TicketType.vipPackage : "generalAdmission" in value ? TicketType.generalAdmission : "timeSlot" in value ? TicketType.timeSlot : value;
+}
+function from_candid_variant_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    dj: null;
+} | {
+    workshop: null;
+} | {
+    modelingAssignment: null;
+} | {
+    musicFestival: null;
+} | {
+    privateEvent: null;
+} | {
+    conference: null;
+} | {
+    luxuryParty: null;
+} | {
+    sports: null;
+} | {
+    celebrity: null;
+}): EventType {
+    return "dj" in value ? EventType.dj : "workshop" in value ? EventType.workshop : "modelingAssignment" in value ? EventType.modelingAssignment : "musicFestival" in value ? EventType.musicFestival : "privateEvent" in value ? EventType.privateEvent : "conference" in value ? EventType.conference : "luxuryParty" in value ? EventType.luxuryParty : "sports" in value ? EventType.sports : "celebrity" in value ? EventType.celebrity : value;
+}
+function from_candid_variant_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    cancelled: null;
+} | {
+    confirmed: null;
+} | {
+    draft: null;
+}): AIItineraryStatus {
+    return "cancelled" in value ? AIItineraryStatus.cancelled : "confirmed" in value ? AIItineraryStatus.confirmed : "draft" in value ? AIItineraryStatus.draft : value;
+}
+function from_candid_variant_n31(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     completed: {
         userPrincipal: [] | [string];
         response: string;
@@ -1408,324 +1485,13 @@ function from_candid_variant_n58(_uploadFile: (file: ExternalBlob) => Promise<Ui
 } {
     return "completed" in value ? {
         __kind__: "completed",
-        completed: from_candid_record_n59(_uploadFile, _downloadFile, value.completed)
+        completed: from_candid_record_n32(_uploadFile, _downloadFile, value.completed)
     } : "failed" in value ? {
         __kind__: "failed",
         failed: value.failed
     } : value;
 }
-function from_candid_variant_n66(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    pending: null;
-} | {
-    rejected: null;
-} | {
-    processed: null;
-}): RefundStatus {
-    return "pending" in value ? RefundStatus.pending : "rejected" in value ? RefundStatus.rejected : "processed" in value ? RefundStatus.processed : value;
-}
-function from_candid_variant_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    cancelled: null;
-} | {
-    published: null;
-} | {
-    completed: null;
-} | {
-    draft: null;
-}): EventStatus {
-    return "cancelled" in value ? EventStatus.cancelled : "published" in value ? EventStatus.published : "completed" in value ? EventStatus.completed : "draft" in value ? EventStatus.draft : value;
-}
-function from_candid_vec_n34(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Event>): Array<Event> {
-    return value.map((x)=>from_candid_Event_n5(_uploadFile, _downloadFile, x));
-}
-function from_candid_vec_n35(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Ticket>): Array<Ticket> {
-    return value.map((x)=>from_candid_Ticket_n15(_uploadFile, _downloadFile, x));
-}
-function from_candid_vec_n39(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_AuditLog>): Array<AuditLog> {
-    return value.map((x)=>from_candid_AuditLog_n40(_uploadFile, _downloadFile, x));
-}
-function from_candid_vec_n56(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Booking>): Array<Booking> {
-    return value.map((x)=>from_candid_Booking_n25(_uploadFile, _downloadFile, x));
-}
-function from_candid_vec_n61(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_VendorProfile>): Array<VendorProfile> {
-    return value.map((x)=>from_candid_VendorProfile_n30(_uploadFile, _downloadFile, x));
-}
-function to_candid_ActionType_n37(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ActionType): _ActionType {
-    return to_candid_variant_n38(_uploadFile, _downloadFile, value);
-}
-function to_candid_AddEventArgs_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: AddEventArgs): _AddEventArgs {
-    return to_candid_record_n2(_uploadFile, _downloadFile, value);
-}
-function to_candid_AppUserRole_n71(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: AppUserRole): _AppUserRole {
-    return to_candid_variant_n72(_uploadFile, _downloadFile, value);
-}
-function to_candid_BookingStatus_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: BookingStatus): _BookingStatus {
-    return to_candid_variant_n24(_uploadFile, _downloadFile, value);
-}
-function to_candid_Booking_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Booking): _Booking {
-    return to_candid_record_n22(_uploadFile, _downloadFile, value);
-}
-function to_candid_EventCategory_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: EventCategory): _EventCategory {
-    return to_candid_variant_n4(_uploadFile, _downloadFile, value);
-}
-function to_candid_EventStatus_n75(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: EventStatus): _EventStatus {
-    return to_candid_variant_n76(_uploadFile, _downloadFile, value);
-}
-function to_candid_TicketType_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: TicketType): _TicketType {
-    return to_candid_variant_n14(_uploadFile, _downloadFile, value);
-}
-function to_candid_Ticket_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Ticket): _Ticket {
-    return to_candid_record_n12(_uploadFile, _downloadFile, value);
-}
-function to_candid_UpdateEventArgs_n73(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UpdateEventArgs): _UpdateEventArgs {
-    return to_candid_record_n74(_uploadFile, _downloadFile, value);
-}
-function to_candid_UserProfile_n67(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
-    return to_candid_record_n68(_uploadFile, _downloadFile, value);
-}
-function to_candid_UserRole_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
-    return to_candid_variant_n20(_uploadFile, _downloadFile, value);
-}
-function to_candid_UserStatus_n69(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserStatus): _UserStatus {
-    return to_candid_variant_n70(_uploadFile, _downloadFile, value);
-}
-function to_candid_opt_n36(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ActionType | null): [] | [_ActionType] {
-    return value === null ? candid_none() : candid_some(to_candid_ActionType_n37(_uploadFile, _downloadFile, value));
-}
-function to_candid_record_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    id: string;
-    eventId: string;
-    baseCurrency: string;
-    availableQuantity: bigint;
-    name: string;
-    ticketType: TicketType;
-    price: bigint;
-    totalQuantity: bigint;
-}): {
-    id: string;
-    eventId: string;
-    baseCurrency: string;
-    availableQuantity: bigint;
-    name: string;
-    ticketType: _TicketType;
-    price: bigint;
-    totalQuantity: bigint;
-} {
-    return {
-        id: value.id,
-        eventId: value.eventId,
-        baseCurrency: value.baseCurrency,
-        availableQuantity: value.availableQuantity,
-        name: value.name,
-        ticketType: to_candid_TicketType_n13(_uploadFile, _downloadFile, value.ticketType),
-        price: value.price,
-        totalQuantity: value.totalQuantity
-    };
-}
-function to_candid_record_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    id: string;
-    baseCurrency: string;
-    title: string;
-    country: string;
-    venue: string;
-    city: string;
-    tags: Array<string>;
-    description: string;
-    multiCurrencyEnabled: boolean;
-    coverImage: string;
-    vendorId: string;
-    category: EventCategory;
-    eventDate: Time;
-    supportedCurrencies: Array<string>;
-}): {
-    id: string;
-    baseCurrency: string;
-    title: string;
-    country: string;
-    venue: string;
-    city: string;
-    tags: Array<string>;
-    description: string;
-    multiCurrencyEnabled: boolean;
-    coverImage: string;
-    vendorId: string;
-    category: _EventCategory;
-    eventDate: _Time;
-    supportedCurrencies: Array<string>;
-} {
-    return {
-        id: value.id,
-        baseCurrency: value.baseCurrency,
-        title: value.title,
-        country: value.country,
-        venue: value.venue,
-        city: value.city,
-        tags: value.tags,
-        description: value.description,
-        multiCurrencyEnabled: value.multiCurrencyEnabled,
-        coverImage: value.coverImage,
-        vendorId: value.vendorId,
-        category: to_candid_EventCategory_n3(_uploadFile, _downloadFile, value.category),
-        eventDate: value.eventDate,
-        supportedCurrencies: value.supportedCurrencies
-    };
-}
-function to_candid_record_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    id: string;
-    status: BookingStatus;
-    eventId: string;
-    seatNumbers: Array<bigint>;
-    idempotencyKey: string;
-    ticketTypeId: string;
-    userId: string;
-    fraudScore: bigint;
-    createdAt: Time;
-    lockToken: string;
-    totalAmount: bigint;
-    notes?: string;
-    quantity: bigint;
-    stripeSessionId: string;
-    timeSlot?: string;
-}): {
-    id: string;
-    status: _BookingStatus;
-    eventId: string;
-    seatNumbers: Array<bigint>;
-    idempotencyKey: string;
-    ticketTypeId: string;
-    userId: string;
-    fraudScore: bigint;
-    createdAt: _Time;
-    lockToken: string;
-    totalAmount: bigint;
-    notes: [] | [string];
-    quantity: bigint;
-    stripeSessionId: string;
-    timeSlot: [] | [string];
-} {
-    return {
-        id: value.id,
-        status: to_candid_BookingStatus_n23(_uploadFile, _downloadFile, value.status),
-        eventId: value.eventId,
-        seatNumbers: value.seatNumbers,
-        idempotencyKey: value.idempotencyKey,
-        ticketTypeId: value.ticketTypeId,
-        userId: value.userId,
-        fraudScore: value.fraudScore,
-        createdAt: value.createdAt,
-        lockToken: value.lockToken,
-        totalAmount: value.totalAmount,
-        notes: value.notes ? candid_some(value.notes) : candid_none(),
-        quantity: value.quantity,
-        stripeSessionId: value.stripeSessionId,
-        timeSlot: value.timeSlot ? candid_some(value.timeSlot) : candid_none()
-    };
-}
-function to_candid_record_n68(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    id: string;
-    status: UserStatus;
-    appRole: AppUserRole;
-    name: string;
-    createdAt: Time;
-    email: string;
-}): {
-    id: string;
-    status: _UserStatus;
-    appRole: _AppUserRole;
-    name: string;
-    createdAt: _Time;
-    email: string;
-} {
-    return {
-        id: value.id,
-        status: to_candid_UserStatus_n69(_uploadFile, _downloadFile, value.status),
-        appRole: to_candid_AppUserRole_n71(_uploadFile, _downloadFile, value.appRole),
-        name: value.name,
-        createdAt: value.createdAt,
-        email: value.email
-    };
-}
-function to_candid_record_n74(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    id: string;
-    status: EventStatus;
-    baseCurrency: string;
-    title: string;
-    country: string;
-    venue: string;
-    city: string;
-    tags: Array<string>;
-    description: string;
-    multiCurrencyEnabled: boolean;
-    coverImage: string;
-    vendorId: string;
-    category: EventCategory;
-    eventDate: Time;
-    supportedCurrencies: Array<string>;
-}): {
-    id: string;
-    status: _EventStatus;
-    baseCurrency: string;
-    title: string;
-    country: string;
-    venue: string;
-    city: string;
-    tags: Array<string>;
-    description: string;
-    multiCurrencyEnabled: boolean;
-    coverImage: string;
-    vendorId: string;
-    category: _EventCategory;
-    eventDate: _Time;
-    supportedCurrencies: Array<string>;
-} {
-    return {
-        id: value.id,
-        status: to_candid_EventStatus_n75(_uploadFile, _downloadFile, value.status),
-        baseCurrency: value.baseCurrency,
-        title: value.title,
-        country: value.country,
-        venue: value.venue,
-        city: value.city,
-        tags: value.tags,
-        description: value.description,
-        multiCurrencyEnabled: value.multiCurrencyEnabled,
-        coverImage: value.coverImage,
-        vendorId: value.vendorId,
-        category: to_candid_EventCategory_n3(_uploadFile, _downloadFile, value.category),
-        eventDate: value.eventDate,
-        supportedCurrencies: value.supportedCurrencies
-    };
-}
-function to_candid_variant_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: TicketType): {
-    numberedSeat: null;
-} | {
-    generalAdmission: null;
-} | {
-    timeSlot: null;
-} {
-    return value == TicketType.numberedSeat ? {
-        numberedSeat: null
-    } : value == TicketType.generalAdmission ? {
-        generalAdmission: null
-    } : value == TicketType.timeSlot ? {
-        timeSlot: null
-    } : value;
-}
-function to_candid_variant_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): {
-    admin: null;
-} | {
-    user: null;
-} | {
-    guest: null;
-} {
-    return value == UserRole.admin ? {
-        admin: null
-    } : value == UserRole.user ? {
-        user: null
-    } : value == UserRole.guest ? {
-        guest: null
-    } : value;
-}
-function to_candid_variant_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: BookingStatus): {
+function from_candid_variant_n37(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     cancelled: null;
 } | {
     pending: null;
@@ -1733,134 +1499,170 @@ function to_candid_variant_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint
     refunded: null;
 } | {
     confirmed: null;
+} | {
+    onHold: null;
+}): BookingStatus {
+    return "cancelled" in value ? BookingStatus.cancelled : "pending" in value ? BookingStatus.pending : "refunded" in value ? BookingStatus.refunded : "confirmed" in value ? BookingStatus.confirmed : "onHold" in value ? BookingStatus.onHold : value;
+}
+function from_candid_variant_n46(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    pending: null;
+} | {
+    released: null;
+} | {
+    rejected: null;
+}): EscrowPayoutStatus {
+    return "pending" in value ? EscrowPayoutStatus.pending : "released" in value ? EscrowPayoutStatus.released : "rejected" in value ? EscrowPayoutStatus.rejected : value;
+}
+function from_candid_variant_n51(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    autoHeld: null;
+} | {
+    cleared: null;
+} | {
+    flagged: null;
+}): FraudStatus {
+    return "autoHeld" in value ? FraudStatus.autoHeld : "cleared" in value ? FraudStatus.cleared : "flagged" in value ? FraudStatus.flagged : value;
+}
+function from_candid_vec_n33(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Booking>): Array<Booking> {
+    return value.map((x)=>from_candid_Booking_n34(_uploadFile, _downloadFile, x));
+}
+function from_candid_vec_n39(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_User>): Array<User> {
+    return value.map((x)=>from_candid_User_n10(_uploadFile, _downloadFile, x));
+}
+function from_candid_vec_n42(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_EscrowPayout>): Array<EscrowPayout> {
+    return value.map((x)=>from_candid_EscrowPayout_n43(_uploadFile, _downloadFile, x));
+}
+function from_candid_vec_n47(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_FraudLog>): Array<FraudLog> {
+    return value.map((x)=>from_candid_FraudLog_n48(_uploadFile, _downloadFile, x));
+}
+function from_candid_vec_n52(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_AIItineraryLog>): Array<AIItineraryLog> {
+    return value.map((x)=>from_candid_AIItineraryLog_n25(_uploadFile, _downloadFile, x));
+}
+function from_candid_vec_n53(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_PreloadedEventProfile>): Array<PreloadedEventProfile> {
+    return value.map((x)=>from_candid_PreloadedEventProfile_n54(_uploadFile, _downloadFile, x));
+}
+function from_candid_vec_n58(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Event>): Array<Event> {
+    return value.map((x)=>from_candid_Event_n17(_uploadFile, _downloadFile, x));
+}
+function to_candid_EventType_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: EventType): _EventType {
+    return to_candid_variant_n4(_uploadFile, _downloadFile, value);
+}
+function to_candid_TicketType_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: TicketType): _TicketType {
+    return to_candid_variant_n6(_uploadFile, _downloadFile, value);
+}
+function to_candid_UserRole__1_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole__1): _UserRole__1 {
+    return to_candid_variant_n2(_uploadFile, _downloadFile, value);
+}
+function to_candid_UserRole_n59(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
+    return to_candid_variant_n60(_uploadFile, _downloadFile, value);
+}
+function to_candid_opt_n40(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Principal | null): [] | [Principal] {
+    return value === null ? candid_none() : candid_some(value);
+}
+function to_candid_opt_n41(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: bigint | null): [] | [bigint] {
+    return value === null ? candid_none() : candid_some(value);
+}
+function to_candid_opt_n56(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: EventType | null): [] | [_EventType] {
+    return value === null ? candid_none() : candid_some(to_candid_EventType_n3(_uploadFile, _downloadFile, value));
+}
+function to_candid_opt_n57(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: boolean | null): [] | [boolean] {
+    return value === null ? candid_none() : candid_some(value);
+}
+function to_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: string | null): [] | [string] {
+    return value === null ? candid_none() : candid_some(value);
+}
+function to_candid_opt_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: bigint | null): [] | [bigint] {
+    return value === null ? candid_none() : candid_some(value);
+}
+function to_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole__1): {
+    admin: null;
+} | {
+    user: null;
+} | {
+    guest: null;
 } {
-    return value == BookingStatus.cancelled ? {
-        cancelled: null
-    } : value == BookingStatus.pending ? {
-        pending: null
-    } : value == BookingStatus.refunded ? {
-        refunded: null
-    } : value == BookingStatus.confirmed ? {
-        confirmed: null
+    return value == UserRole__1.admin ? {
+        admin: null
+    } : value == UserRole__1.user ? {
+        user: null
+    } : value == UserRole__1.guest ? {
+        guest: null
     } : value;
 }
-function to_candid_variant_n38(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ActionType): {
-    eventPublished: null;
-} | {
-    refundInitiated: null;
-} | {
-    paymentSucceeded: null;
-} | {
-    adminAction: null;
-} | {
-    bookingCreated: null;
-} | {
-    bookingConfirmed: null;
-} | {
-    userRegistered: null;
-} | {
-    vendorApproved: null;
-} | {
-    eventCreated: null;
-} | {
-    fraudHold: null;
-} | {
-    bookingCancelled: null;
-} | {
-    paymentFailed: null;
-} {
-    return value == ActionType.eventPublished ? {
-        eventPublished: null
-    } : value == ActionType.refundInitiated ? {
-        refundInitiated: null
-    } : value == ActionType.paymentSucceeded ? {
-        paymentSucceeded: null
-    } : value == ActionType.adminAction ? {
-        adminAction: null
-    } : value == ActionType.bookingCreated ? {
-        bookingCreated: null
-    } : value == ActionType.bookingConfirmed ? {
-        bookingConfirmed: null
-    } : value == ActionType.userRegistered ? {
-        userRegistered: null
-    } : value == ActionType.vendorApproved ? {
-        vendorApproved: null
-    } : value == ActionType.eventCreated ? {
-        eventCreated: null
-    } : value == ActionType.fraudHold ? {
-        fraudHold: null
-    } : value == ActionType.bookingCancelled ? {
-        bookingCancelled: null
-    } : value == ActionType.paymentFailed ? {
-        paymentFailed: null
-    } : value;
-}
-function to_candid_variant_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: EventCategory): {
-    concert: null;
+function to_candid_variant_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: EventType): {
+    dj: null;
 } | {
     workshop: null;
+} | {
+    modelingAssignment: null;
+} | {
+    musicFestival: null;
 } | {
     privateEvent: null;
 } | {
     conference: null;
 } | {
-    sports: null;
-} {
-    return value == EventCategory.concert ? {
-        concert: null
-    } : value == EventCategory.workshop ? {
-        workshop: null
-    } : value == EventCategory.privateEvent ? {
-        privateEvent: null
-    } : value == EventCategory.conference ? {
-        conference: null
-    } : value == EventCategory.sports ? {
-        sports: null
-    } : value;
-}
-function to_candid_variant_n70(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserStatus): {
-    active: null;
+    luxuryParty: null;
 } | {
-    suspended: null;
+    sports: null;
+} | {
+    celebrity: null;
 } {
-    return value == UserStatus.active ? {
-        active: null
-    } : value == UserStatus.suspended ? {
-        suspended: null
+    return value == EventType.dj ? {
+        dj: null
+    } : value == EventType.workshop ? {
+        workshop: null
+    } : value == EventType.modelingAssignment ? {
+        modelingAssignment: null
+    } : value == EventType.musicFestival ? {
+        musicFestival: null
+    } : value == EventType.privateEvent ? {
+        privateEvent: null
+    } : value == EventType.conference ? {
+        conference: null
+    } : value == EventType.luxuryParty ? {
+        luxuryParty: null
+    } : value == EventType.sports ? {
+        sports: null
+    } : value == EventType.celebrity ? {
+        celebrity: null
     } : value;
 }
-function to_candid_variant_n72(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: AppUserRole): {
+function to_candid_variant_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: TicketType): {
+    numberedSeat: null;
+} | {
+    vipPackage: null;
+} | {
+    generalAdmission: null;
+} | {
+    timeSlot: null;
+} {
+    return value == TicketType.numberedSeat ? {
+        numberedSeat: null
+    } : value == TicketType.vipPackage ? {
+        vipPackage: null
+    } : value == TicketType.generalAdmission ? {
+        generalAdmission: null
+    } : value == TicketType.timeSlot ? {
+        timeSlot: null
+    } : value;
+}
+function to_candid_variant_n60(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): {
+    admin: null;
+} | {
     customer: null;
 } | {
     superAdmin: null;
 } | {
     vendor: null;
 } {
-    return value == AppUserRole.customer ? {
+    return value == UserRole.admin ? {
+        admin: null
+    } : value == UserRole.customer ? {
         customer: null
-    } : value == AppUserRole.superAdmin ? {
+    } : value == UserRole.superAdmin ? {
         superAdmin: null
-    } : value == AppUserRole.vendor ? {
+    } : value == UserRole.vendor ? {
         vendor: null
-    } : value;
-}
-function to_candid_variant_n76(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: EventStatus): {
-    cancelled: null;
-} | {
-    published: null;
-} | {
-    completed: null;
-} | {
-    draft: null;
-} {
-    return value == EventStatus.cancelled ? {
-        cancelled: null
-    } : value == EventStatus.published ? {
-        published: null
-    } : value == EventStatus.completed ? {
-        completed: null
-    } : value == EventStatus.draft ? {
-        draft: null
     } : value;
 }
 export interface CreateActorOptions {

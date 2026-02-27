@@ -8,96 +8,10 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
-export const EventCategory = IDL.Variant({
-  'concert' : IDL.Null,
-  'workshop' : IDL.Null,
-  'privateEvent' : IDL.Null,
-  'conference' : IDL.Null,
-  'sports' : IDL.Null,
-});
-export const Time = IDL.Int;
-export const AddEventArgs = IDL.Record({
-  'id' : IDL.Text,
-  'baseCurrency' : IDL.Text,
-  'title' : IDL.Text,
-  'country' : IDL.Text,
-  'venue' : IDL.Text,
-  'city' : IDL.Text,
-  'tags' : IDL.Vec(IDL.Text),
-  'description' : IDL.Text,
-  'multiCurrencyEnabled' : IDL.Bool,
-  'coverImage' : IDL.Text,
-  'vendorId' : IDL.Text,
-  'category' : EventCategory,
-  'eventDate' : Time,
-  'supportedCurrencies' : IDL.Vec(IDL.Text),
-});
-export const EventStatus = IDL.Variant({
-  'cancelled' : IDL.Null,
-  'published' : IDL.Null,
-  'completed' : IDL.Null,
-  'draft' : IDL.Null,
-});
-export const Event = IDL.Record({
-  'id' : IDL.Text,
-  'status' : EventStatus,
-  'baseCurrency' : IDL.Text,
-  'title' : IDL.Text,
-  'country' : IDL.Text,
-  'venue' : IDL.Text,
-  'city' : IDL.Text,
-  'createdAt' : Time,
-  'tags' : IDL.Vec(IDL.Text),
-  'description' : IDL.Text,
-  'multiCurrencyEnabled' : IDL.Bool,
-  'coverImage' : IDL.Text,
-  'vendorId' : IDL.Text,
-  'category' : EventCategory,
-  'eventDate' : Time,
-  'supportedCurrencies' : IDL.Vec(IDL.Text),
-});
-export const TicketType = IDL.Variant({
-  'numberedSeat' : IDL.Null,
-  'generalAdmission' : IDL.Null,
-  'timeSlot' : IDL.Null,
-});
-export const Ticket = IDL.Record({
-  'id' : IDL.Text,
-  'eventId' : IDL.Text,
-  'baseCurrency' : IDL.Text,
-  'availableQuantity' : IDL.Nat,
-  'name' : IDL.Text,
-  'ticketType' : TicketType,
-  'price' : IDL.Nat,
-  'totalQuantity' : IDL.Nat,
-});
-export const UserRole = IDL.Variant({
+export const UserRole__1 = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
   'guest' : IDL.Null,
-});
-export const BookingStatus = IDL.Variant({
-  'cancelled' : IDL.Null,
-  'pending' : IDL.Null,
-  'refunded' : IDL.Null,
-  'confirmed' : IDL.Null,
-});
-export const Booking = IDL.Record({
-  'id' : IDL.Text,
-  'status' : BookingStatus,
-  'eventId' : IDL.Text,
-  'seatNumbers' : IDL.Vec(IDL.Nat),
-  'idempotencyKey' : IDL.Text,
-  'ticketTypeId' : IDL.Text,
-  'userId' : IDL.Text,
-  'fraudScore' : IDL.Nat,
-  'createdAt' : Time,
-  'lockToken' : IDL.Text,
-  'totalAmount' : IDL.Nat,
-  'notes' : IDL.Opt(IDL.Text),
-  'quantity' : IDL.Nat,
-  'stripeSessionId' : IDL.Text,
-  'timeSlot' : IDL.Opt(IDL.Text),
 });
 export const ShoppingItem = IDL.Record({
   'productName' : IDL.Text,
@@ -106,62 +20,94 @@ export const ShoppingItem = IDL.Record({
   'priceInCents' : IDL.Nat,
   'productDescription' : IDL.Text,
 });
-export const VendorApprovalStatus = IDL.Variant({
-  'pending' : IDL.Null,
-  'approved' : IDL.Null,
-  'rejected' : IDL.Null,
+export const EventType = IDL.Variant({
+  'dj' : IDL.Null,
+  'workshop' : IDL.Null,
+  'modelingAssignment' : IDL.Null,
+  'musicFestival' : IDL.Null,
+  'privateEvent' : IDL.Null,
+  'conference' : IDL.Null,
+  'luxuryParty' : IDL.Null,
+  'sports' : IDL.Null,
+  'celebrity' : IDL.Null,
 });
-export const VendorProfile = IDL.Record({
-  'userId' : IDL.Text,
-  'createdAt' : Time,
-  'businessName' : IDL.Text,
-  'approvalStatus' : VendorApprovalStatus,
-  'totalRevenue' : IDL.Nat,
+export const Time = IDL.Int;
+export const TicketType = IDL.Variant({
+  'numberedSeat' : IDL.Null,
+  'vipPackage' : IDL.Null,
+  'generalAdmission' : IDL.Null,
+  'timeSlot' : IDL.Null,
 });
-export const ActionType = IDL.Variant({
-  'eventPublished' : IDL.Null,
-  'refundInitiated' : IDL.Null,
-  'paymentSucceeded' : IDL.Null,
-  'adminAction' : IDL.Null,
-  'bookingCreated' : IDL.Null,
-  'bookingConfirmed' : IDL.Null,
-  'userRegistered' : IDL.Null,
-  'vendorApproved' : IDL.Null,
-  'eventCreated' : IDL.Null,
-  'fraudHold' : IDL.Null,
-  'bookingCancelled' : IDL.Null,
-  'paymentFailed' : IDL.Null,
-});
-export const AuditLog = IDL.Record({
-  'actionType' : ActionType,
-  'actorId' : IDL.Text,
-  'timestamp' : Time,
-  'details' : IDL.Text,
-  'targetId' : IDL.Text,
-});
-export const UserStatus = IDL.Variant({
-  'active' : IDL.Null,
-  'suspended' : IDL.Null,
-});
-export const AppUserRole = IDL.Variant({
+export const UserRole = IDL.Variant({
+  'admin' : IDL.Null,
   'customer' : IDL.Null,
   'superAdmin' : IDL.Null,
   'vendor' : IDL.Null,
 });
-export const UserProfile = IDL.Record({
-  'id' : IDL.Text,
-  'status' : UserStatus,
-  'appRole' : AppUserRole,
+export const User = IDL.Record({
+  'isApproved' : IDL.Bool,
+  'principal' : IDL.Principal,
   'name' : IDL.Text,
   'createdAt' : Time,
+  'role' : UserRole,
   'email' : IDL.Text,
 });
-export const CurrencyConfig = IDL.Record({
-  'eventId' : IDL.Text,
+export const Event = IDL.Record({
+  'id' : IDL.Nat,
   'baseCurrency' : IDL.Text,
+  'title' : IDL.Text,
+  'endDate' : Time,
+  'isPublished' : IDL.Bool,
+  'basePriceINR' : IDL.Nat,
+  'globalRank' : IDL.Opt(IDL.Nat),
+  'createdAt' : Time,
+  'tags' : IDL.Vec(IDL.Text),
+  'isTop100India' : IDL.Bool,
+  'description' : IDL.Text,
   'multiCurrencyEnabled' : IDL.Bool,
+  'indiaRank' : IDL.Opt(IDL.Nat),
+  'totalSeats' : IDL.Nat,
   'updatedAt' : Time,
+  'isTop100Global' : IDL.Bool,
+  'ticketType' : TicketType,
+  'availableSeats' : IDL.Nat,
+  'vendorId' : IDL.Principal,
+  'promoVideoUrl' : IDL.Text,
+  'bannerUrl' : IDL.Text,
+  'location' : IDL.Text,
+  'startDate' : Time,
   'supportedCurrencies' : IDL.Vec(IDL.Text),
+  'eventType' : EventType,
+});
+export const ExchangeRates = IDL.Record({
+  'inrToAed' : IDL.Float64,
+  'inrToEur' : IDL.Float64,
+  'inrToGbp' : IDL.Float64,
+  'inrToUsd' : IDL.Float64,
+});
+export const AIItineraryStatus = IDL.Variant({
+  'cancelled' : IDL.Null,
+  'confirmed' : IDL.Null,
+  'draft' : IDL.Null,
+});
+export const AIItineraryLog = IDL.Record({
+  'id' : IDL.Nat,
+  'status' : AIItineraryStatus,
+  'eventId' : IDL.Opt(IDL.Text),
+  'destination' : IDL.Text,
+  'userId' : IDL.Principal,
+  'createdAt' : Time,
+  'travelDates' : IDL.Text,
+  'itineraryData' : IDL.Text,
+  'services' : IDL.Vec(IDL.Text),
+});
+export const VotingEntry = IDL.Record({
+  'id' : IDL.Nat,
+  'region' : IDL.Text,
+  'voteCount' : IDL.Nat,
+  'createdAt' : Time,
+  'category' : IDL.Text,
+  'artistName' : IDL.Text,
 });
 export const StripeSessionStatus = IDL.Variant({
   'completed' : IDL.Record({
@@ -170,18 +116,81 @@ export const StripeSessionStatus = IDL.Variant({
   }),
   'failed' : IDL.Record({ 'error' : IDL.Text }),
 });
-export const RefundStatus = IDL.Variant({
+export const BookingStatus = IDL.Variant({
+  'cancelled' : IDL.Null,
   'pending' : IDL.Null,
-  'rejected' : IDL.Null,
-  'processed' : IDL.Null,
+  'refunded' : IDL.Null,
+  'confirmed' : IDL.Null,
+  'onHold' : IDL.Null,
 });
-export const Refund = IDL.Record({
-  'id' : IDL.Text,
-  'status' : RefundStatus,
-  'bookingId' : IDL.Text,
+export const Booking = IDL.Record({
+  'id' : IDL.Nat,
+  'status' : BookingStatus,
+  'eventId' : IDL.Nat,
+  'userId' : IDL.Principal,
   'createdAt' : Time,
-  'amount' : IDL.Nat,
-  'reason' : IDL.Text,
+  'confirmedAt' : IDL.Opt(IDL.Int),
+  'cancelledAt' : IDL.Opt(IDL.Int),
+  'ticketType' : TicketType,
+  'totalAmountINR' : IDL.Nat,
+  'currency' : IDL.Text,
+  'quantity' : IDL.Nat,
+  'seatLockId' : IDL.Nat,
+  'bookingToken' : IDL.Text,
+  'stripeSessionId' : IDL.Opt(IDL.Text),
+});
+export const AuditLog = IDL.Record({
+  'id' : IDL.Nat,
+  'action' : IDL.Text,
+  'entityId' : IDL.Text,
+  'timestamp' : IDL.Int,
+  'details' : IDL.Text,
+  'entityType' : IDL.Text,
+  'userActor' : IDL.Principal,
+});
+export const EscrowPayoutStatus = IDL.Variant({
+  'pending' : IDL.Null,
+  'released' : IDL.Null,
+  'rejected' : IDL.Null,
+});
+export const EscrowPayout = IDL.Record({
+  'id' : IDL.Nat,
+  'status' : EscrowPayoutStatus,
+  'eventId' : IDL.Nat,
+  'processedAt' : IDL.Opt(IDL.Int),
+  'adminNote' : IDL.Opt(IDL.Text),
+  'vendorId' : IDL.Principal,
+  'amountINR' : IDL.Nat,
+  'requestedAt' : IDL.Int,
+});
+export const FraudStatus = IDL.Variant({
+  'autoHeld' : IDL.Null,
+  'cleared' : IDL.Null,
+  'flagged' : IDL.Null,
+});
+export const FraudLog = IDL.Record({
+  'id' : IDL.Nat,
+  'flags' : IDL.Vec(IDL.Text),
+  'status' : FraudStatus,
+  'bookingId' : IDL.Nat,
+  'userId' : IDL.Principal,
+  'createdAt' : Time,
+  'riskScore' : IDL.Nat,
+});
+export const PreloadedEventProfile = IDL.Record({
+  'id' : IDL.Nat,
+  'eventId' : IDL.Opt(IDL.Text),
+  'title' : IDL.Text,
+  'basePriceINR' : IDL.Nat,
+  'globalRank' : IDL.Opt(IDL.Nat),
+  'isTop100India' : IDL.Bool,
+  'indiaRank' : IDL.Opt(IDL.Nat),
+  'isActive' : IDL.Bool,
+  'isTop100Global' : IDL.Bool,
+  'promoVideoUrl' : IDL.Text,
+  'bannerUrl' : IDL.Text,
+  'location' : IDL.Text,
+  'eventType' : EventType,
 });
 export const StripeConfiguration = IDL.Record({
   'allowedCountries' : IDL.Vec(IDL.Text),
@@ -205,209 +214,188 @@ export const TransformationOutput = IDL.Record({
   'body' : IDL.Vec(IDL.Nat8),
   'headers' : IDL.Vec(http_header),
 });
-export const UpdateEventArgs = IDL.Record({
-  'id' : IDL.Text,
-  'status' : EventStatus,
-  'baseCurrency' : IDL.Text,
-  'title' : IDL.Text,
-  'country' : IDL.Text,
-  'venue' : IDL.Text,
-  'city' : IDL.Text,
-  'tags' : IDL.Vec(IDL.Text),
-  'description' : IDL.Text,
-  'multiCurrencyEnabled' : IDL.Bool,
-  'coverImage' : IDL.Text,
-  'vendorId' : IDL.Text,
-  'category' : EventCategory,
-  'eventDate' : Time,
-  'supportedCurrencies' : IDL.Vec(IDL.Text),
-});
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
-  'activateUser' : IDL.Func([IDL.Principal], [], []),
-  'addEvent' : IDL.Func([AddEventArgs], [Event], []),
-  'addTicket' : IDL.Func([Ticket], [Ticket], []),
-  'approveVendor' : IDL.Func([IDL.Text], [], []),
-  'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-  'cancelBooking' : IDL.Func([IDL.Text], [], []),
-  'createBooking' : IDL.Func([Booking], [Booking], []),
+  'approveVendor' : IDL.Func([IDL.Principal], [], []),
+  'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole__1], [], []),
+  'cancelBooking' : IDL.Func([IDL.Nat], [], []),
+  'confirmBooking' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+  'createBooking' : IDL.Func(
+      [IDL.Nat, IDL.Nat, IDL.Nat, IDL.Text],
+      [IDL.Nat],
+      [],
+    ),
   'createCheckoutSession' : IDL.Func(
       [IDL.Vec(ShoppingItem), IDL.Text, IDL.Text],
       [IDL.Text],
       [],
     ),
-  'createVendorProfile' : IDL.Func([IDL.Text], [VendorProfile], []),
-  'deleteEvent' : IDL.Func([IDL.Text], [], []),
-  'deleteTicket' : IDL.Func([IDL.Text], [], []),
-  'getAllEvents' : IDL.Func([], [IDL.Vec(Event)], ['query']),
-  'getAllTickets' : IDL.Func([], [IDL.Vec(Ticket)], ['query']),
-  'getAuditLogs' : IDL.Func(
-      [Time, Time, IDL.Opt(ActionType)],
-      [IDL.Vec(AuditLog)],
-      ['query'],
-    ),
-  'getBookingById' : IDL.Func([IDL.Text], [IDL.Opt(Booking)], ['query']),
-  'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
-  'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-  'getCurrencyConfig' : IDL.Func(
-      [IDL.Text],
-      [IDL.Opt(CurrencyConfig)],
-      ['query'],
-    ),
-  'getEventById' : IDL.Func([IDL.Text], [IDL.Opt(Event)], ['query']),
-  'getFraudQueue' : IDL.Func([], [IDL.Vec(Booking)], ['query']),
-  'getMyBookings' : IDL.Func([], [IDL.Vec(Booking)], ['query']),
-  'getMyVendorEvents' : IDL.Func([], [IDL.Vec(Event)], ['query']),
-  'getMyVendorStats' : IDL.Func(
-      [],
+  'createEvent' : IDL.Func(
       [
-        IDL.Record({
-          'totalEvents' : IDL.Nat,
-          'totalBookings' : IDL.Nat,
-          'totalRevenue' : IDL.Nat,
-        }),
+        IDL.Text,
+        IDL.Text,
+        EventType,
+        IDL.Text,
+        Time,
+        Time,
+        IDL.Nat,
+        IDL.Vec(IDL.Text),
+        IDL.Bool,
+        IDL.Nat,
+        TicketType,
+        IDL.Text,
+        IDL.Text,
+        IDL.Vec(IDL.Text),
       ],
+      [IDL.Nat],
+      [],
+    ),
+  'createItinerary' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Text, IDL.Text, IDL.Vec(IDL.Text)],
+      [IDL.Nat],
+      [],
+    ),
+  'createPreloadedProfile' : IDL.Func(
+      [
+        IDL.Opt(IDL.Text),
+        IDL.Text,
+        EventType,
+        IDL.Text,
+        IDL.Nat,
+        IDL.Text,
+        IDL.Text,
+        IDL.Bool,
+        IDL.Bool,
+        IDL.Opt(IDL.Nat),
+        IDL.Opt(IDL.Nat),
+      ],
+      [IDL.Nat],
+      [],
+    ),
+  'deleteEvent' : IDL.Func([IDL.Nat], [], []),
+  'getCallerUserProfile' : IDL.Func([], [IDL.Opt(User)], ['query']),
+  'getCallerUserRole' : IDL.Func([], [UserRole__1], ['query']),
+  'getEvent' : IDL.Func([IDL.Nat], [IDL.Opt(Event)], ['query']),
+  'getExchangeRates' : IDL.Func([], [ExchangeRates], ['query']),
+  'getItinerary' : IDL.Func([IDL.Nat], [IDL.Opt(AIItineraryLog)], ['query']),
+  'getLeaderboard' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Opt(IDL.Text), IDL.Nat],
+      [IDL.Vec(VotingEntry)],
       ['query'],
     ),
   'getPlatformStats' : IDL.Func(
       [],
       [
         IDL.Record({
-          'confirmedBookings' : IDL.Nat,
+          'totalRevenueINR' : IDL.Nat,
+          'totalEvents' : IDL.Nat,
+          'totalBookings' : IDL.Nat,
+          'pendingEscrowPayouts' : IDL.Nat,
           'totalUsers' : IDL.Nat,
-          'totalRevenue' : IDL.Nat,
+          'activeFraudAlerts' : IDL.Nat,
           'totalVendors' : IDL.Nat,
-          'activeEvents' : IDL.Nat,
         }),
       ],
       ['query'],
     ),
   'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
-  'getTicketById' : IDL.Func([IDL.Text], [IDL.Opt(Ticket)], ['query']),
-  'getUserProfile' : IDL.Func(
-      [IDL.Principal],
-      [IDL.Opt(UserProfile)],
-      ['query'],
-    ),
-  'getVendorApprovalQueue' : IDL.Func([], [IDL.Vec(VendorProfile)], ['query']),
-  'getVendorProfile' : IDL.Func(
-      [IDL.Text],
-      [IDL.Opt(VendorProfile)],
+  'getUserProfile' : IDL.Func([IDL.Principal], [IDL.Opt(User)], ['query']),
+  'getVendorStats' : IDL.Func(
+      [],
+      [
+        IDL.Record({
+          'bookingsCount' : IDL.Nat,
+          'revenueINR' : IDL.Nat,
+          'eventsCount' : IDL.Nat,
+        }),
+      ],
       ['query'],
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
-  'processRefund' : IDL.Func([IDL.Text, IDL.Bool], [], []),
-  'rejectVendor' : IDL.Func([IDL.Text], [], []),
-  'requestRefund' : IDL.Func([IDL.Text, IDL.Text], [Refund], []),
-  'reviewFraudBooking' : IDL.Func([IDL.Text, IDL.Bool], [], []),
-  'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
-  'setCurrencyConfig' : IDL.Func([CurrencyConfig], [], []),
+  'listAllBookings' : IDL.Func([], [IDL.Vec(Booking)], ['query']),
+  'listAllUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
+  'listAuditLogs' : IDL.Func(
+      [
+        IDL.Opt(IDL.Principal),
+        IDL.Opt(IDL.Text),
+        IDL.Opt(IDL.Int),
+        IDL.Opt(IDL.Int),
+      ],
+      [IDL.Vec(AuditLog)],
+      ['query'],
+    ),
+  'listEscrowPayouts' : IDL.Func([], [IDL.Vec(EscrowPayout)], ['query']),
+  'listFraudLogs' : IDL.Func([], [IDL.Vec(FraudLog)], ['query']),
+  'listMyBookings' : IDL.Func([], [IDL.Vec(Booking)], ['query']),
+  'listMyItineraries' : IDL.Func([], [IDL.Vec(AIItineraryLog)], ['query']),
+  'listPreloadedProfiles' : IDL.Func(
+      [],
+      [IDL.Vec(PreloadedEventProfile)],
+      ['query'],
+    ),
+  'listPublishedEvents' : IDL.Func(
+      [
+        IDL.Opt(EventType),
+        IDL.Opt(IDL.Text),
+        IDL.Opt(IDL.Nat),
+        IDL.Opt(IDL.Nat),
+        IDL.Opt(IDL.Bool),
+        IDL.Opt(IDL.Bool),
+      ],
+      [IDL.Vec(Event)],
+      ['query'],
+    ),
+  'lockSeat' : IDL.Func([IDL.Nat, IDL.Opt(IDL.Text)], [IDL.Text], []),
+  'publishEvent' : IDL.Func([IDL.Nat], [], []),
+  'registerUser' : IDL.Func([IDL.Text, IDL.Text, UserRole], [], []),
+  'rejectEscrowPayout' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+  'releaseEscrowPayout' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+  'requestEscrowPayout' : IDL.Func([IDL.Nat], [IDL.Nat], []),
+  'reviewFraudFlag' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
+  'saveCallerUserProfile' : IDL.Func([IDL.Text, IDL.Text], [], []),
+  'setEventTop100' : IDL.Func(
+      [IDL.Nat, IDL.Bool, IDL.Bool, IDL.Opt(IDL.Nat), IDL.Opt(IDL.Nat)],
+      [],
+      [],
+    ),
+  'setExchangeRates' : IDL.Func(
+      [IDL.Float64, IDL.Float64, IDL.Float64, IDL.Float64],
+      [],
+      [],
+    ),
   'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
-  'suspendUser' : IDL.Func([IDL.Principal], [], []),
   'transform' : IDL.Func(
       [TransformationInput],
       [TransformationOutput],
       ['query'],
     ),
-  'updateEvent' : IDL.Func([UpdateEventArgs], [Event], []),
-  'updateTicket' : IDL.Func([Ticket], [Ticket], []),
+  'unpublishEvent' : IDL.Func([IDL.Nat], [], []),
+  'updateEvent' : IDL.Func(
+      [
+        IDL.Nat,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Nat,
+        IDL.Text,
+        IDL.Text,
+        IDL.Vec(IDL.Text),
+      ],
+      [],
+      [],
+    ),
+  'voteForArtist' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
 });
 
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
-  const EventCategory = IDL.Variant({
-    'concert' : IDL.Null,
-    'workshop' : IDL.Null,
-    'privateEvent' : IDL.Null,
-    'conference' : IDL.Null,
-    'sports' : IDL.Null,
-  });
-  const Time = IDL.Int;
-  const AddEventArgs = IDL.Record({
-    'id' : IDL.Text,
-    'baseCurrency' : IDL.Text,
-    'title' : IDL.Text,
-    'country' : IDL.Text,
-    'venue' : IDL.Text,
-    'city' : IDL.Text,
-    'tags' : IDL.Vec(IDL.Text),
-    'description' : IDL.Text,
-    'multiCurrencyEnabled' : IDL.Bool,
-    'coverImage' : IDL.Text,
-    'vendorId' : IDL.Text,
-    'category' : EventCategory,
-    'eventDate' : Time,
-    'supportedCurrencies' : IDL.Vec(IDL.Text),
-  });
-  const EventStatus = IDL.Variant({
-    'cancelled' : IDL.Null,
-    'published' : IDL.Null,
-    'completed' : IDL.Null,
-    'draft' : IDL.Null,
-  });
-  const Event = IDL.Record({
-    'id' : IDL.Text,
-    'status' : EventStatus,
-    'baseCurrency' : IDL.Text,
-    'title' : IDL.Text,
-    'country' : IDL.Text,
-    'venue' : IDL.Text,
-    'city' : IDL.Text,
-    'createdAt' : Time,
-    'tags' : IDL.Vec(IDL.Text),
-    'description' : IDL.Text,
-    'multiCurrencyEnabled' : IDL.Bool,
-    'coverImage' : IDL.Text,
-    'vendorId' : IDL.Text,
-    'category' : EventCategory,
-    'eventDate' : Time,
-    'supportedCurrencies' : IDL.Vec(IDL.Text),
-  });
-  const TicketType = IDL.Variant({
-    'numberedSeat' : IDL.Null,
-    'generalAdmission' : IDL.Null,
-    'timeSlot' : IDL.Null,
-  });
-  const Ticket = IDL.Record({
-    'id' : IDL.Text,
-    'eventId' : IDL.Text,
-    'baseCurrency' : IDL.Text,
-    'availableQuantity' : IDL.Nat,
-    'name' : IDL.Text,
-    'ticketType' : TicketType,
-    'price' : IDL.Nat,
-    'totalQuantity' : IDL.Nat,
-  });
-  const UserRole = IDL.Variant({
+  const UserRole__1 = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
-  });
-  const BookingStatus = IDL.Variant({
-    'cancelled' : IDL.Null,
-    'pending' : IDL.Null,
-    'refunded' : IDL.Null,
-    'confirmed' : IDL.Null,
-  });
-  const Booking = IDL.Record({
-    'id' : IDL.Text,
-    'status' : BookingStatus,
-    'eventId' : IDL.Text,
-    'seatNumbers' : IDL.Vec(IDL.Nat),
-    'idempotencyKey' : IDL.Text,
-    'ticketTypeId' : IDL.Text,
-    'userId' : IDL.Text,
-    'fraudScore' : IDL.Nat,
-    'createdAt' : Time,
-    'lockToken' : IDL.Text,
-    'totalAmount' : IDL.Nat,
-    'notes' : IDL.Opt(IDL.Text),
-    'quantity' : IDL.Nat,
-    'stripeSessionId' : IDL.Text,
-    'timeSlot' : IDL.Opt(IDL.Text),
   });
   const ShoppingItem = IDL.Record({
     'productName' : IDL.Text,
@@ -416,62 +404,94 @@ export const idlFactory = ({ IDL }) => {
     'priceInCents' : IDL.Nat,
     'productDescription' : IDL.Text,
   });
-  const VendorApprovalStatus = IDL.Variant({
-    'pending' : IDL.Null,
-    'approved' : IDL.Null,
-    'rejected' : IDL.Null,
+  const EventType = IDL.Variant({
+    'dj' : IDL.Null,
+    'workshop' : IDL.Null,
+    'modelingAssignment' : IDL.Null,
+    'musicFestival' : IDL.Null,
+    'privateEvent' : IDL.Null,
+    'conference' : IDL.Null,
+    'luxuryParty' : IDL.Null,
+    'sports' : IDL.Null,
+    'celebrity' : IDL.Null,
   });
-  const VendorProfile = IDL.Record({
-    'userId' : IDL.Text,
-    'createdAt' : Time,
-    'businessName' : IDL.Text,
-    'approvalStatus' : VendorApprovalStatus,
-    'totalRevenue' : IDL.Nat,
+  const Time = IDL.Int;
+  const TicketType = IDL.Variant({
+    'numberedSeat' : IDL.Null,
+    'vipPackage' : IDL.Null,
+    'generalAdmission' : IDL.Null,
+    'timeSlot' : IDL.Null,
   });
-  const ActionType = IDL.Variant({
-    'eventPublished' : IDL.Null,
-    'refundInitiated' : IDL.Null,
-    'paymentSucceeded' : IDL.Null,
-    'adminAction' : IDL.Null,
-    'bookingCreated' : IDL.Null,
-    'bookingConfirmed' : IDL.Null,
-    'userRegistered' : IDL.Null,
-    'vendorApproved' : IDL.Null,
-    'eventCreated' : IDL.Null,
-    'fraudHold' : IDL.Null,
-    'bookingCancelled' : IDL.Null,
-    'paymentFailed' : IDL.Null,
-  });
-  const AuditLog = IDL.Record({
-    'actionType' : ActionType,
-    'actorId' : IDL.Text,
-    'timestamp' : Time,
-    'details' : IDL.Text,
-    'targetId' : IDL.Text,
-  });
-  const UserStatus = IDL.Variant({
-    'active' : IDL.Null,
-    'suspended' : IDL.Null,
-  });
-  const AppUserRole = IDL.Variant({
+  const UserRole = IDL.Variant({
+    'admin' : IDL.Null,
     'customer' : IDL.Null,
     'superAdmin' : IDL.Null,
     'vendor' : IDL.Null,
   });
-  const UserProfile = IDL.Record({
-    'id' : IDL.Text,
-    'status' : UserStatus,
-    'appRole' : AppUserRole,
+  const User = IDL.Record({
+    'isApproved' : IDL.Bool,
+    'principal' : IDL.Principal,
     'name' : IDL.Text,
     'createdAt' : Time,
+    'role' : UserRole,
     'email' : IDL.Text,
   });
-  const CurrencyConfig = IDL.Record({
-    'eventId' : IDL.Text,
+  const Event = IDL.Record({
+    'id' : IDL.Nat,
     'baseCurrency' : IDL.Text,
+    'title' : IDL.Text,
+    'endDate' : Time,
+    'isPublished' : IDL.Bool,
+    'basePriceINR' : IDL.Nat,
+    'globalRank' : IDL.Opt(IDL.Nat),
+    'createdAt' : Time,
+    'tags' : IDL.Vec(IDL.Text),
+    'isTop100India' : IDL.Bool,
+    'description' : IDL.Text,
     'multiCurrencyEnabled' : IDL.Bool,
+    'indiaRank' : IDL.Opt(IDL.Nat),
+    'totalSeats' : IDL.Nat,
     'updatedAt' : Time,
+    'isTop100Global' : IDL.Bool,
+    'ticketType' : TicketType,
+    'availableSeats' : IDL.Nat,
+    'vendorId' : IDL.Principal,
+    'promoVideoUrl' : IDL.Text,
+    'bannerUrl' : IDL.Text,
+    'location' : IDL.Text,
+    'startDate' : Time,
     'supportedCurrencies' : IDL.Vec(IDL.Text),
+    'eventType' : EventType,
+  });
+  const ExchangeRates = IDL.Record({
+    'inrToAed' : IDL.Float64,
+    'inrToEur' : IDL.Float64,
+    'inrToGbp' : IDL.Float64,
+    'inrToUsd' : IDL.Float64,
+  });
+  const AIItineraryStatus = IDL.Variant({
+    'cancelled' : IDL.Null,
+    'confirmed' : IDL.Null,
+    'draft' : IDL.Null,
+  });
+  const AIItineraryLog = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : AIItineraryStatus,
+    'eventId' : IDL.Opt(IDL.Text),
+    'destination' : IDL.Text,
+    'userId' : IDL.Principal,
+    'createdAt' : Time,
+    'travelDates' : IDL.Text,
+    'itineraryData' : IDL.Text,
+    'services' : IDL.Vec(IDL.Text),
+  });
+  const VotingEntry = IDL.Record({
+    'id' : IDL.Nat,
+    'region' : IDL.Text,
+    'voteCount' : IDL.Nat,
+    'createdAt' : Time,
+    'category' : IDL.Text,
+    'artistName' : IDL.Text,
   });
   const StripeSessionStatus = IDL.Variant({
     'completed' : IDL.Record({
@@ -480,18 +500,81 @@ export const idlFactory = ({ IDL }) => {
     }),
     'failed' : IDL.Record({ 'error' : IDL.Text }),
   });
-  const RefundStatus = IDL.Variant({
+  const BookingStatus = IDL.Variant({
+    'cancelled' : IDL.Null,
     'pending' : IDL.Null,
-    'rejected' : IDL.Null,
-    'processed' : IDL.Null,
+    'refunded' : IDL.Null,
+    'confirmed' : IDL.Null,
+    'onHold' : IDL.Null,
   });
-  const Refund = IDL.Record({
-    'id' : IDL.Text,
-    'status' : RefundStatus,
-    'bookingId' : IDL.Text,
+  const Booking = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : BookingStatus,
+    'eventId' : IDL.Nat,
+    'userId' : IDL.Principal,
     'createdAt' : Time,
-    'amount' : IDL.Nat,
-    'reason' : IDL.Text,
+    'confirmedAt' : IDL.Opt(IDL.Int),
+    'cancelledAt' : IDL.Opt(IDL.Int),
+    'ticketType' : TicketType,
+    'totalAmountINR' : IDL.Nat,
+    'currency' : IDL.Text,
+    'quantity' : IDL.Nat,
+    'seatLockId' : IDL.Nat,
+    'bookingToken' : IDL.Text,
+    'stripeSessionId' : IDL.Opt(IDL.Text),
+  });
+  const AuditLog = IDL.Record({
+    'id' : IDL.Nat,
+    'action' : IDL.Text,
+    'entityId' : IDL.Text,
+    'timestamp' : IDL.Int,
+    'details' : IDL.Text,
+    'entityType' : IDL.Text,
+    'userActor' : IDL.Principal,
+  });
+  const EscrowPayoutStatus = IDL.Variant({
+    'pending' : IDL.Null,
+    'released' : IDL.Null,
+    'rejected' : IDL.Null,
+  });
+  const EscrowPayout = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : EscrowPayoutStatus,
+    'eventId' : IDL.Nat,
+    'processedAt' : IDL.Opt(IDL.Int),
+    'adminNote' : IDL.Opt(IDL.Text),
+    'vendorId' : IDL.Principal,
+    'amountINR' : IDL.Nat,
+    'requestedAt' : IDL.Int,
+  });
+  const FraudStatus = IDL.Variant({
+    'autoHeld' : IDL.Null,
+    'cleared' : IDL.Null,
+    'flagged' : IDL.Null,
+  });
+  const FraudLog = IDL.Record({
+    'id' : IDL.Nat,
+    'flags' : IDL.Vec(IDL.Text),
+    'status' : FraudStatus,
+    'bookingId' : IDL.Nat,
+    'userId' : IDL.Principal,
+    'createdAt' : Time,
+    'riskScore' : IDL.Nat,
+  });
+  const PreloadedEventProfile = IDL.Record({
+    'id' : IDL.Nat,
+    'eventId' : IDL.Opt(IDL.Text),
+    'title' : IDL.Text,
+    'basePriceINR' : IDL.Nat,
+    'globalRank' : IDL.Opt(IDL.Nat),
+    'isTop100India' : IDL.Bool,
+    'indiaRank' : IDL.Opt(IDL.Nat),
+    'isActive' : IDL.Bool,
+    'isTop100Global' : IDL.Bool,
+    'promoVideoUrl' : IDL.Text,
+    'bannerUrl' : IDL.Text,
+    'location' : IDL.Text,
+    'eventType' : EventType,
   });
   const StripeConfiguration = IDL.Record({
     'allowedCountries' : IDL.Vec(IDL.Text),
@@ -512,118 +595,179 @@ export const idlFactory = ({ IDL }) => {
     'body' : IDL.Vec(IDL.Nat8),
     'headers' : IDL.Vec(http_header),
   });
-  const UpdateEventArgs = IDL.Record({
-    'id' : IDL.Text,
-    'status' : EventStatus,
-    'baseCurrency' : IDL.Text,
-    'title' : IDL.Text,
-    'country' : IDL.Text,
-    'venue' : IDL.Text,
-    'city' : IDL.Text,
-    'tags' : IDL.Vec(IDL.Text),
-    'description' : IDL.Text,
-    'multiCurrencyEnabled' : IDL.Bool,
-    'coverImage' : IDL.Text,
-    'vendorId' : IDL.Text,
-    'category' : EventCategory,
-    'eventDate' : Time,
-    'supportedCurrencies' : IDL.Vec(IDL.Text),
-  });
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
-    'activateUser' : IDL.Func([IDL.Principal], [], []),
-    'addEvent' : IDL.Func([AddEventArgs], [Event], []),
-    'addTicket' : IDL.Func([Ticket], [Ticket], []),
-    'approveVendor' : IDL.Func([IDL.Text], [], []),
-    'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-    'cancelBooking' : IDL.Func([IDL.Text], [], []),
-    'createBooking' : IDL.Func([Booking], [Booking], []),
+    'approveVendor' : IDL.Func([IDL.Principal], [], []),
+    'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole__1], [], []),
+    'cancelBooking' : IDL.Func([IDL.Nat], [], []),
+    'confirmBooking' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+    'createBooking' : IDL.Func(
+        [IDL.Nat, IDL.Nat, IDL.Nat, IDL.Text],
+        [IDL.Nat],
+        [],
+      ),
     'createCheckoutSession' : IDL.Func(
         [IDL.Vec(ShoppingItem), IDL.Text, IDL.Text],
         [IDL.Text],
         [],
       ),
-    'createVendorProfile' : IDL.Func([IDL.Text], [VendorProfile], []),
-    'deleteEvent' : IDL.Func([IDL.Text], [], []),
-    'deleteTicket' : IDL.Func([IDL.Text], [], []),
-    'getAllEvents' : IDL.Func([], [IDL.Vec(Event)], ['query']),
-    'getAllTickets' : IDL.Func([], [IDL.Vec(Ticket)], ['query']),
-    'getAuditLogs' : IDL.Func(
-        [Time, Time, IDL.Opt(ActionType)],
-        [IDL.Vec(AuditLog)],
-        ['query'],
-      ),
-    'getBookingById' : IDL.Func([IDL.Text], [IDL.Opt(Booking)], ['query']),
-    'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
-    'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-    'getCurrencyConfig' : IDL.Func(
-        [IDL.Text],
-        [IDL.Opt(CurrencyConfig)],
-        ['query'],
-      ),
-    'getEventById' : IDL.Func([IDL.Text], [IDL.Opt(Event)], ['query']),
-    'getFraudQueue' : IDL.Func([], [IDL.Vec(Booking)], ['query']),
-    'getMyBookings' : IDL.Func([], [IDL.Vec(Booking)], ['query']),
-    'getMyVendorEvents' : IDL.Func([], [IDL.Vec(Event)], ['query']),
-    'getMyVendorStats' : IDL.Func(
-        [],
+    'createEvent' : IDL.Func(
         [
-          IDL.Record({
-            'totalEvents' : IDL.Nat,
-            'totalBookings' : IDL.Nat,
-            'totalRevenue' : IDL.Nat,
-          }),
+          IDL.Text,
+          IDL.Text,
+          EventType,
+          IDL.Text,
+          Time,
+          Time,
+          IDL.Nat,
+          IDL.Vec(IDL.Text),
+          IDL.Bool,
+          IDL.Nat,
+          TicketType,
+          IDL.Text,
+          IDL.Text,
+          IDL.Vec(IDL.Text),
         ],
+        [IDL.Nat],
+        [],
+      ),
+    'createItinerary' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Text, IDL.Text, IDL.Vec(IDL.Text)],
+        [IDL.Nat],
+        [],
+      ),
+    'createPreloadedProfile' : IDL.Func(
+        [
+          IDL.Opt(IDL.Text),
+          IDL.Text,
+          EventType,
+          IDL.Text,
+          IDL.Nat,
+          IDL.Text,
+          IDL.Text,
+          IDL.Bool,
+          IDL.Bool,
+          IDL.Opt(IDL.Nat),
+          IDL.Opt(IDL.Nat),
+        ],
+        [IDL.Nat],
+        [],
+      ),
+    'deleteEvent' : IDL.Func([IDL.Nat], [], []),
+    'getCallerUserProfile' : IDL.Func([], [IDL.Opt(User)], ['query']),
+    'getCallerUserRole' : IDL.Func([], [UserRole__1], ['query']),
+    'getEvent' : IDL.Func([IDL.Nat], [IDL.Opt(Event)], ['query']),
+    'getExchangeRates' : IDL.Func([], [ExchangeRates], ['query']),
+    'getItinerary' : IDL.Func([IDL.Nat], [IDL.Opt(AIItineraryLog)], ['query']),
+    'getLeaderboard' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Opt(IDL.Text), IDL.Nat],
+        [IDL.Vec(VotingEntry)],
         ['query'],
       ),
     'getPlatformStats' : IDL.Func(
         [],
         [
           IDL.Record({
-            'confirmedBookings' : IDL.Nat,
+            'totalRevenueINR' : IDL.Nat,
+            'totalEvents' : IDL.Nat,
+            'totalBookings' : IDL.Nat,
+            'pendingEscrowPayouts' : IDL.Nat,
             'totalUsers' : IDL.Nat,
-            'totalRevenue' : IDL.Nat,
+            'activeFraudAlerts' : IDL.Nat,
             'totalVendors' : IDL.Nat,
-            'activeEvents' : IDL.Nat,
           }),
         ],
         ['query'],
       ),
     'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
-    'getTicketById' : IDL.Func([IDL.Text], [IDL.Opt(Ticket)], ['query']),
-    'getUserProfile' : IDL.Func(
-        [IDL.Principal],
-        [IDL.Opt(UserProfile)],
-        ['query'],
-      ),
-    'getVendorApprovalQueue' : IDL.Func(
+    'getUserProfile' : IDL.Func([IDL.Principal], [IDL.Opt(User)], ['query']),
+    'getVendorStats' : IDL.Func(
         [],
-        [IDL.Vec(VendorProfile)],
-        ['query'],
-      ),
-    'getVendorProfile' : IDL.Func(
-        [IDL.Text],
-        [IDL.Opt(VendorProfile)],
+        [
+          IDL.Record({
+            'bookingsCount' : IDL.Nat,
+            'revenueINR' : IDL.Nat,
+            'eventsCount' : IDL.Nat,
+          }),
+        ],
         ['query'],
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
-    'processRefund' : IDL.Func([IDL.Text, IDL.Bool], [], []),
-    'rejectVendor' : IDL.Func([IDL.Text], [], []),
-    'requestRefund' : IDL.Func([IDL.Text, IDL.Text], [Refund], []),
-    'reviewFraudBooking' : IDL.Func([IDL.Text, IDL.Bool], [], []),
-    'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
-    'setCurrencyConfig' : IDL.Func([CurrencyConfig], [], []),
+    'listAllBookings' : IDL.Func([], [IDL.Vec(Booking)], ['query']),
+    'listAllUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
+    'listAuditLogs' : IDL.Func(
+        [
+          IDL.Opt(IDL.Principal),
+          IDL.Opt(IDL.Text),
+          IDL.Opt(IDL.Int),
+          IDL.Opt(IDL.Int),
+        ],
+        [IDL.Vec(AuditLog)],
+        ['query'],
+      ),
+    'listEscrowPayouts' : IDL.Func([], [IDL.Vec(EscrowPayout)], ['query']),
+    'listFraudLogs' : IDL.Func([], [IDL.Vec(FraudLog)], ['query']),
+    'listMyBookings' : IDL.Func([], [IDL.Vec(Booking)], ['query']),
+    'listMyItineraries' : IDL.Func([], [IDL.Vec(AIItineraryLog)], ['query']),
+    'listPreloadedProfiles' : IDL.Func(
+        [],
+        [IDL.Vec(PreloadedEventProfile)],
+        ['query'],
+      ),
+    'listPublishedEvents' : IDL.Func(
+        [
+          IDL.Opt(EventType),
+          IDL.Opt(IDL.Text),
+          IDL.Opt(IDL.Nat),
+          IDL.Opt(IDL.Nat),
+          IDL.Opt(IDL.Bool),
+          IDL.Opt(IDL.Bool),
+        ],
+        [IDL.Vec(Event)],
+        ['query'],
+      ),
+    'lockSeat' : IDL.Func([IDL.Nat, IDL.Opt(IDL.Text)], [IDL.Text], []),
+    'publishEvent' : IDL.Func([IDL.Nat], [], []),
+    'registerUser' : IDL.Func([IDL.Text, IDL.Text, UserRole], [], []),
+    'rejectEscrowPayout' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+    'releaseEscrowPayout' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+    'requestEscrowPayout' : IDL.Func([IDL.Nat], [IDL.Nat], []),
+    'reviewFraudFlag' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
+    'saveCallerUserProfile' : IDL.Func([IDL.Text, IDL.Text], [], []),
+    'setEventTop100' : IDL.Func(
+        [IDL.Nat, IDL.Bool, IDL.Bool, IDL.Opt(IDL.Nat), IDL.Opt(IDL.Nat)],
+        [],
+        [],
+      ),
+    'setExchangeRates' : IDL.Func(
+        [IDL.Float64, IDL.Float64, IDL.Float64, IDL.Float64],
+        [],
+        [],
+      ),
     'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
-    'suspendUser' : IDL.Func([IDL.Principal], [], []),
     'transform' : IDL.Func(
         [TransformationInput],
         [TransformationOutput],
         ['query'],
       ),
-    'updateEvent' : IDL.Func([UpdateEventArgs], [Event], []),
-    'updateTicket' : IDL.Func([Ticket], [Ticket], []),
+    'unpublishEvent' : IDL.Func([IDL.Nat], [], []),
+    'updateEvent' : IDL.Func(
+        [
+          IDL.Nat,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Nat,
+          IDL.Text,
+          IDL.Text,
+          IDL.Vec(IDL.Text),
+        ],
+        [],
+        [],
+      ),
+    'voteForArtist' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
   });
 };
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { useInternetIdentity } from "@/hooks/useInternetIdentity";
 import { useGetCallerUserProfile } from "@/hooks/useQueries";
-import { AppUserRole, Ticket, UserProfile, VendorApprovalStatus } from "@/backend";
+import { AppUserRole, UserProfile } from "@/types";
 import Navbar from "@/components/Navbar";
 import ProfileSetup from "@/components/ProfileSetup";
 import Marketplace from "@/pages/Marketplace";
@@ -16,18 +16,33 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import { AnyEvent } from "@/components/EventCard";
 import { MockEvent } from "@/utils/mockData";
 
-// Simple path-based routing
+// ─── Simple view-based routing ──────────────────────────────────────────────
 function getInitialView(): string {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("payment") === "success") return "payment-success";
+  if (params.get("payment") === "cancelled") return "payment-failure";
   const path = window.location.pathname;
   if (path === "/payment-success") return "payment-success";
   if (path === "/payment-failure") return "payment-failure";
   return "home";
 }
 
+// Derive ticket stub from event for BookingFlow
+type TicketStub = {
+  id: string;
+  name: string;
+  ticketType: string;
+  price: bigint;
+  availableQuantity: bigint;
+  totalQuantity: bigint;
+  baseCurrency: string;
+  eventId: string;
+};
+
 export default function App() {
   const [view, setView] = useState<string>(getInitialView());
   const [selectedEvent, setSelectedEvent] = useState<AnyEvent | null>(null);
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<TicketStub | null>(null);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -38,14 +53,16 @@ export default function App() {
     data: userProfile,
     isLoading: profileLoading,
     isFetched: profileFetched,
+    refetch: refetchProfile,
   } = useGetCallerUserProfile();
 
-  // Detect payment return paths
+  // Handle payment return from Stripe
   useEffect(() => {
-    const path = window.location.pathname;
-    if (path === "/payment-success") {
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get("payment");
+    if (payment === "success") {
       setView("payment-success");
-    } else if (path === "/payment-failure") {
+    } else if (payment === "cancelled") {
       setView("payment-failure");
     }
   }, []);
@@ -58,12 +75,7 @@ export default function App() {
     userProfile === null;
 
   const navigate = (newView: string) => {
-    if (newView.startsWith("category-")) {
-      setView("home");
-      return;
-    }
     setView(newView);
-    // Push to history to allow /payment-success etc to work
     if (newView !== "payment-success" && newView !== "payment-failure") {
       window.history.pushState({}, "", "/");
     }
@@ -74,45 +86,50 @@ export default function App() {
     setView("event-detail");
   };
 
-  const handleBookTicket = (event: AnyEvent, ticket: Ticket | null, qty: number) => {
+  const handleBookTicket = (event: AnyEvent, ticket: TicketStub | null, qty: number) => {
     setSelectedEvent(event);
     setSelectedTicket(ticket);
     setSelectedQuantity(qty);
     setView("booking-flow");
   };
 
-  const handleLoginRequired = () => {
-    // User needs to be authenticated
-  };
-
   const handleProfileSetupComplete = () => {
-    // Just re-render; profile will be fetched
+    refetchProfile();
   };
 
   const getDashboardView = (): string => {
     if (!userProfile) return "customer-dashboard";
-    if (userProfile.appRole === AppUserRole.superAdmin) return "admin-dashboard";
+    if (
+      userProfile.appRole === AppUserRole.superAdmin ||
+      userProfile.appRole === AppUserRole.admin
+    ) return "admin-dashboard";
     if (userProfile.appRole === AppUserRole.vendor) return "vendor-dashboard";
     return "customer-dashboard";
   };
 
-  const isDemo = (e: AnyEvent): e is MockEvent => "isDemo" in e && e.isDemo === true;
+  const isDemo = (e: AnyEvent): e is MockEvent => "isDemo" in e && (e as MockEvent).isDemo === true;
 
-  const getVendorProfile = (): { businessName: string; approvalStatus: VendorApprovalStatus } | null => {
-    return null; // Fetched internally in VendorDashboard if needed
-  };
+  const isAdmin =
+    userProfile?.appRole === AppUserRole.superAdmin ||
+    userProfile?.appRole === AppUserRole.admin;
 
+  // ── Loading splash ──────────────────────────────────────────────────────────
   if (isInitializing) {
     return (
       <div className="fixed inset-0 bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center mx-auto animate-pulse">
-            <svg className="h-6 w-6 text-primary" fill="currentColor" viewBox="0 0 24 24" aria-label="Loading">
-              <title>Loading</title>
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-            </svg>
+          <div className="relative w-14 h-14 mx-auto">
+            <div className="w-14 h-14 rounded-2xl bg-primary/20 border border-primary/40 flex items-center justify-center shadow-[0_0_30px_rgba(0,102,255,0.4)] animate-pulse">
+              <svg className="h-7 w-7 text-primary" fill="currentColor" viewBox="0 0 24 24" aria-label="Loading">
+                <title>Loading</title>
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
+            </div>
           </div>
-          <p className="text-muted-foreground text-sm">Loading BOOK NOW…</p>
+          <div>
+            <p className="font-display font-bold text-foreground text-lg">BOOK NOW</p>
+            <p className="text-muted-foreground text-xs mt-1">by DMT CREATOLOGY</p>
+          </div>
         </div>
       </div>
     );
@@ -136,7 +153,7 @@ export default function App() {
         <ProfileSetup onComplete={handleProfileSetupComplete} />
       )}
 
-      {/* Navbar — shown on all views except payment pages */}
+      {/* Navbar */}
       {view !== "payment-success" && view !== "payment-failure" && (
         <Navbar
           currentView={view}
@@ -147,7 +164,7 @@ export default function App() {
         />
       )}
 
-      {/* Route: Home / Marketplace */}
+      {/* Home / Marketplace */}
       {view === "home" && (
         <Marketplace
           onSelectEvent={handleSelectEvent}
@@ -156,29 +173,29 @@ export default function App() {
         />
       )}
 
-      {/* Route: Event Detail */}
+      {/* Event Detail */}
       {view === "event-detail" && selectedEvent && (
         <EventDetail
           event={selectedEvent}
           onBack={() => setView("home")}
-          onBook={handleBookTicket}
+          onBook={(event, ticket, qty) => handleBookTicket(event, ticket as TicketStub | null, qty)}
           isAuthenticated={isAuthenticated}
-          onLoginRequired={handleLoginRequired}
+          onLoginRequired={() => {}}
         />
       )}
 
-      {/* Route: Booking Flow */}
+      {/* Booking Flow */}
       {view === "booking-flow" && selectedEvent && selectedTicket && (
         <BookingFlow
           event={selectedEvent}
-          ticket={selectedTicket}
+          ticket={selectedTicket as Parameters<typeof BookingFlow>[0]["ticket"]}
           quantity={selectedQuantity}
           onBack={() => setView(isDemo(selectedEvent) ? "event-detail" : "event-detail")}
           userId={identity?.getPrincipal().toString() ?? ""}
         />
       )}
 
-      {/* Route: Payment Success */}
+      {/* Payment Success */}
       {view === "payment-success" && (
         <PaymentSuccess
           onHome={() => { navigate("home"); window.history.pushState({}, "", "/"); }}
@@ -189,33 +206,33 @@ export default function App() {
         />
       )}
 
-      {/* Route: Payment Failure */}
+      {/* Payment Failure */}
       {view === "payment-failure" && (
         <PaymentFailure
           onHome={() => { navigate("home"); window.history.pushState({}, "", "/"); }}
         />
       )}
 
-      {/* Route: Customer Dashboard */}
+      {/* Customer Dashboard */}
       {view === "customer-dashboard" && isAuthenticated && userProfile && (
         <CustomerDashboard userProfile={userProfile as UserProfile} />
       )}
 
-      {/* Route: Vendor Dashboard */}
+      {/* Vendor Dashboard */}
       {view === "vendor-dashboard" && isAuthenticated && userProfile && (
         <VendorDashboard
           userProfile={userProfile as UserProfile}
-          vendorProfile={getVendorProfile()}
+          vendorProfile={null}
         />
       )}
 
-      {/* Route: Admin Dashboard */}
-      {view === "admin-dashboard" && isAuthenticated && userProfile?.appRole === AppUserRole.superAdmin && (
+      {/* Admin Dashboard */}
+      {view === "admin-dashboard" && isAuthenticated && isAdmin && (
         <AdminDashboard />
       )}
 
       {/* Access denied */}
-      {view === "admin-dashboard" && isAuthenticated && userProfile && userProfile.appRole !== AppUserRole.superAdmin && (
+      {view === "admin-dashboard" && isAuthenticated && userProfile && !isAdmin && (
         <main className="min-h-screen pt-16 flex items-center justify-center">
           <div className="text-center space-y-4 glass-card rounded-2xl p-10 max-w-sm">
             <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
@@ -225,12 +242,12 @@ export default function App() {
               </svg>
             </div>
             <h2 className="font-display text-xl font-bold text-foreground">Access Denied</h2>
-            <p className="text-sm text-muted-foreground">You don't have permission to access this area.</p>
+            <p className="text-sm text-muted-foreground">You don't have permission to access the admin area.</p>
           </div>
         </main>
       )}
 
-      {/* Not authenticated + trying to access protected */}
+      {/* Not authenticated + trying protected page */}
       {(view === "customer-dashboard" || view === "vendor-dashboard" || view === "admin-dashboard") && !isAuthenticated && (
         <main className="min-h-screen pt-16 flex items-center justify-center">
           <div className="text-center space-y-4 glass-card rounded-2xl p-10 max-w-sm">
@@ -241,7 +258,7 @@ export default function App() {
               </svg>
             </div>
             <h2 className="font-display text-xl font-bold text-foreground">Sign In Required</h2>
-            <p className="text-sm text-muted-foreground">Please sign in to access your dashboard.</p>
+            <p className="text-sm text-muted-foreground">Please sign in with Internet Identity to access your dashboard.</p>
           </div>
         </main>
       )}

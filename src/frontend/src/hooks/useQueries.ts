@@ -1,17 +1,27 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useActor } from "./useActor";
-import {
-  AddEventArgs,
+import type {
+  User,
+  Event,
   Booking,
-  CurrencyConfig,
+  EscrowPayout,
+  AuditLog,
+  FraudLog,
+  AIItineraryLog,
+  PreloadedEventProfile,
+  VotingEntry,
+  ExchangeRates,
   ShoppingItem,
-  Ticket,
-  UpdateEventArgs,
-  UserProfile,
-  ActionType,
-  Time,
   StripeConfiguration,
-} from "../backend";
+} from "../backend.d";
+import type { UserRole, EventType, TicketType } from "../backend.d";
+import type { backendInterface } from "../backend.d";
+import { AppUserRole, UserProfile } from "../types";
+
+// Helper to cast actor to full backend interface
+function toBackend(actor: unknown): backendInterface {
+  return actor as unknown as backendInterface;
+}
 
 // ─── User Profile ────────────────────────────────────────────────────────────
 
@@ -22,7 +32,9 @@ export function useGetCallerUserProfile() {
     queryKey: ["currentUserProfile"],
     queryFn: async () => {
       if (!actor) throw new Error("Actor not available");
-      return actor.getCallerUserProfile();
+      const user = await toBackend(actor).getCallerUserProfile();
+      if (!user) return null;
+      return mapUserToProfile(user);
     },
     enabled: !!actor && !actorFetching,
     retry: false,
@@ -35,13 +47,44 @@ export function useGetCallerUserProfile() {
   };
 }
 
+function mapUserToProfile(user: User): UserProfile {
+  const roleMap: Record<string, AppUserRole> = {
+    customer: AppUserRole.customer,
+    vendor: AppUserRole.vendor,
+    admin: AppUserRole.superAdmin,
+    superAdmin: AppUserRole.superAdmin,
+  };
+  return {
+    id: user.principal.toString(),
+    name: user.name,
+    email: user.email,
+    appRole: roleMap[user.role] ?? AppUserRole.customer,
+    status: "active" as AppUserRole,
+    createdAt: user.createdAt,
+  };
+}
+
+export function useRegisterUser() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ name, email, role }: { name: string; email: string; role: UserRole }) => {
+      if (!actor) throw new Error("Actor not available");
+      await toBackend(actor).registerUser(name, email, role);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["currentUserProfile"] });
+    },
+  });
+}
+
 export function useSaveCallerUserProfile() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (profile: UserProfile) => {
+    mutationFn: async ({ name, email }: { name: string; email: string }) => {
       if (!actor) throw new Error("Actor not available");
-      await actor.saveCallerUserProfile(profile);
+      await toBackend(actor).saveCallerUserProfile(name, email);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["currentUserProfile"] });
@@ -51,41 +94,67 @@ export function useSaveCallerUserProfile() {
 
 // ─── Events ──────────────────────────────────────────────────────────────────
 
-export function useGetAllEvents() {
+export function useListPublishedEvents(
+  eventType: EventType | null = null,
+  location: string | null = null,
+  minPrice: bigint | null = null,
+  maxPrice: bigint | null = null,
+  isTop100Global: boolean | null = null,
+  isTop100India: boolean | null = null,
+) {
   const { actor, isFetching } = useActor();
-  return useQuery({
-    queryKey: ["allEvents"],
+  return useQuery<Event[]>({
+    queryKey: ["publishedEvents", String(eventType), String(location), String(minPrice), String(maxPrice), String(isTop100Global), String(isTop100India)],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getAllEvents();
+      return toBackend(actor).listPublishedEvents(eventType, location, minPrice, maxPrice, isTop100Global, isTop100India);
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-export function useGetEventById(eventId: string | null) {
+export function useGetEvent(eventId: bigint | null) {
   const { actor, isFetching } = useActor();
-  return useQuery({
-    queryKey: ["event", eventId],
+  return useQuery<Event | null>({
+    queryKey: ["event", String(eventId)],
     queryFn: async () => {
       if (!actor || !eventId) return null;
-      return actor.getEventById(eventId);
+      return toBackend(actor).getEvent(eventId);
     },
     enabled: !!actor && !isFetching && !!eventId,
   });
 }
 
-export function useAddEvent() {
+export function useCreateEvent() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (args: AddEventArgs) => {
+    mutationFn: async (args: {
+      title: string;
+      description: string;
+      eventType: EventType;
+      location: string;
+      startDate: bigint;
+      endDate: bigint;
+      basePriceINR: bigint;
+      supportedCurrencies: string[];
+      multiCurrencyEnabled: boolean;
+      totalSeats: bigint;
+      ticketType: TicketType;
+      bannerUrl: string;
+      promoVideoUrl: string;
+      tags: string[];
+    }) => {
       if (!actor) throw new Error("Actor not available");
-      return actor.addEvent(args);
+      return toBackend(actor).createEvent(
+        args.title, args.description, args.eventType, args.location,
+        args.startDate, args.endDate, args.basePriceINR, args.supportedCurrencies,
+        args.multiCurrencyEnabled, args.totalSeats, args.ticketType,
+        args.bannerUrl, args.promoVideoUrl, args.tags
+      );
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["allEvents"] });
-      qc.invalidateQueries({ queryKey: ["myVendorEvents"] });
+      qc.invalidateQueries({ queryKey: ["publishedEvents"] });
     },
   });
 }
@@ -94,13 +163,24 @@ export function useUpdateEvent() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (args: UpdateEventArgs) => {
+    mutationFn: async (args: {
+      eventId: bigint;
+      title: string;
+      description: string;
+      location: string;
+      basePriceINR: bigint;
+      bannerUrl: string;
+      promoVideoUrl: string;
+      tags: string[];
+    }) => {
       if (!actor) throw new Error("Actor not available");
-      return actor.updateEvent(args);
+      return toBackend(actor).updateEvent(
+        args.eventId, args.title, args.description, args.location,
+        args.basePriceINR, args.bannerUrl, args.promoVideoUrl, args.tags
+      );
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["allEvents"] });
-      qc.invalidateQueries({ queryKey: ["myVendorEvents"] });
+      qc.invalidateQueries({ queryKey: ["publishedEvents"] });
     },
   });
 }
@@ -109,108 +189,97 @@ export function useDeleteEvent() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (eventId: string) => {
+    mutationFn: async (eventId: bigint) => {
       if (!actor) throw new Error("Actor not available");
-      return actor.deleteEvent(eventId);
+      return toBackend(actor).deleteEvent(eventId);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["allEvents"] });
-      qc.invalidateQueries({ queryKey: ["myVendorEvents"] });
+      qc.invalidateQueries({ queryKey: ["publishedEvents"] });
     },
   });
 }
 
-export function useGetMyVendorEvents() {
-  const { actor, isFetching } = useActor();
-  return useQuery({
-    queryKey: ["myVendorEvents"],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.getMyVendorEvents();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useGetMyVendorStats() {
-  const { actor, isFetching } = useActor();
-  return useQuery({
-    queryKey: ["myVendorStats"],
-    queryFn: async () => {
-      if (!actor) return null;
-      return actor.getMyVendorStats();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-// ─── Tickets ─────────────────────────────────────────────────────────────────
-
-export function useGetAllTickets() {
-  const { actor, isFetching } = useActor();
-  return useQuery({
-    queryKey: ["allTickets"],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.getAllTickets();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useAddTicket() {
+export function usePublishEvent() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (ticket: Ticket) => {
+    mutationFn: async (eventId: bigint) => {
       if (!actor) throw new Error("Actor not available");
-      return actor.addTicket(ticket);
+      return toBackend(actor).publishEvent(eventId);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["allTickets"] });
+      qc.invalidateQueries({ queryKey: ["publishedEvents"] });
     },
   });
 }
 
-export function useUpdateTicket() {
+export function useUnpublishEvent() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (ticket: Ticket) => {
+    mutationFn: async (eventId: bigint) => {
       if (!actor) throw new Error("Actor not available");
-      return actor.updateTicket(ticket);
+      return toBackend(actor).unpublishEvent(eventId);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["allTickets"] });
+      qc.invalidateQueries({ queryKey: ["publishedEvents"] });
     },
   });
 }
 
-export function useDeleteTicket() {
+export function useSetEventTop100() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (ticketId: string) => {
+    mutationFn: async (args: {
+      eventId: bigint;
+      isTop100Global: boolean;
+      isTop100India: boolean;
+      globalRank: bigint | null;
+      indiaRank: bigint | null;
+    }) => {
       if (!actor) throw new Error("Actor not available");
-      return actor.deleteTicket(ticketId);
+      return toBackend(actor).setEventTop100(args.eventId, args.isTop100Global, args.isTop100India, args.globalRank, args.indiaRank);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["allTickets"] });
+      qc.invalidateQueries({ queryKey: ["publishedEvents"] });
     },
   });
 }
 
 // ─── Bookings ─────────────────────────────────────────────────────────────────
 
-export function useGetMyBookings() {
+export function useListMyBookings() {
   const { actor, isFetching } = useActor();
-  return useQuery({
+  return useQuery<Booking[]>({
     queryKey: ["myBookings"],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getMyBookings();
+      return toBackend(actor).listMyBookings();
     },
     enabled: !!actor && !isFetching,
+  });
+}
+
+export function useListAllBookings() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Booking[]>({
+    queryKey: ["allBookings"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return toBackend(actor).listAllBookings();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useLockSeat() {
+  const { actor } = useActor();
+  return useMutation({
+    mutationFn: async ({ eventId, seatNumber }: { eventId: bigint; seatNumber: string | null }) => {
+      if (!actor) throw new Error("Actor not available");
+      return toBackend(actor).lockSeat(eventId, seatNumber);
+    },
   });
 }
 
@@ -218,9 +287,28 @@ export function useCreateBooking() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (booking: Booking) => {
+    mutationFn: async ({ eventId, seatLockId, quantity, currency }: {
+      eventId: bigint;
+      seatLockId: bigint;
+      quantity: bigint;
+      currency: string;
+    }) => {
       if (!actor) throw new Error("Actor not available");
-      return actor.createBooking(booking);
+      return toBackend(actor).createBooking(eventId, seatLockId, quantity, currency);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["myBookings"] });
+    },
+  });
+}
+
+export function useConfirmBooking() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ bookingId, stripeSessionId }: { bookingId: bigint; stripeSessionId: string }) => {
+      if (!actor) throw new Error("Actor not available");
+      return toBackend(actor).confirmBooking(bookingId, stripeSessionId);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["myBookings"] });
@@ -232,23 +320,9 @@ export function useCancelBooking() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (bookingId: string) => {
+    mutationFn: async (bookingId: bigint) => {
       if (!actor) throw new Error("Actor not available");
-      return actor.cancelBooking(bookingId);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["myBookings"] });
-    },
-  });
-}
-
-export function useRequestRefund() {
-  const { actor } = useActor();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ bookingId, reason }: { bookingId: string; reason: string }) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.requestRefund(bookingId, reason);
+      return toBackend(actor).cancelBooking(bookingId);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["myBookings"] });
@@ -258,33 +332,17 @@ export function useRequestRefund() {
 
 // ─── Checkout / Stripe ────────────────────────────────────────────────────────
 
-export type CheckoutSession = { id: string; url: string };
-
 export function useCreateCheckoutSession() {
   const { actor } = useActor();
   return useMutation({
-    mutationFn: async (items: ShoppingItem[]): Promise<CheckoutSession> => {
+    mutationFn: async ({ items, successUrl, cancelUrl }: {
+      items: ShoppingItem[];
+      successUrl: string;
+      cancelUrl: string;
+    }): Promise<string> => {
       if (!actor) throw new Error("Actor not available");
-      const baseUrl = `${window.location.protocol}//${window.location.host}`;
-      const successUrl = `${baseUrl}/payment-success`;
-      const cancelUrl = `${baseUrl}/payment-failure`;
-      const result = await actor.createCheckoutSession(items, successUrl, cancelUrl);
-      const session = JSON.parse(result) as CheckoutSession;
-      if (!session?.url) throw new Error("Stripe session missing url");
-      return session;
+      return toBackend(actor).createCheckoutSession(items, successUrl, cancelUrl);
     },
-  });
-}
-
-export function useGetStripeSessionStatus(sessionId: string | null) {
-  const { actor, isFetching } = useActor();
-  return useQuery({
-    queryKey: ["stripeSession", sessionId],
-    queryFn: async () => {
-      if (!actor || !sessionId) return null;
-      return actor.getStripeSessionStatus(sessionId);
-    },
-    enabled: !!actor && !isFetching && !!sessionId,
   });
 }
 
@@ -294,7 +352,7 @@ export function useIsStripeConfigured() {
     queryKey: ["stripeConfigured"],
     queryFn: async () => {
       if (!actor) return false;
-      return actor.isStripeConfigured();
+      return toBackend(actor).isStripeConfigured();
     },
     enabled: !!actor && !isFetching,
   });
@@ -306,67 +364,10 @@ export function useSetStripeConfiguration() {
   return useMutation({
     mutationFn: async (config: StripeConfiguration) => {
       if (!actor) throw new Error("Actor not available");
-      return actor.setStripeConfiguration(config);
+      return toBackend(actor).setStripeConfiguration(config);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["stripeConfigured"] });
-    },
-  });
-}
-
-// ─── Vendor ────────────────────────────────────────────────────────────────────
-
-export function useCreateVendorProfile() {
-  const { actor } = useActor();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (businessName: string) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.createVendorProfile(businessName);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["currentUserProfile"] });
-      qc.invalidateQueries({ queryKey: ["myVendorProfile"] });
-    },
-  });
-}
-
-export function useGetVendorApprovalQueue() {
-  const { actor, isFetching } = useActor();
-  return useQuery({
-    queryKey: ["vendorApprovalQueue"],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.getVendorApprovalQueue();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useApproveVendor() {
-  const { actor } = useActor();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (vendorId: string) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.approveVendor(vendorId);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["vendorApprovalQueue"] });
-    },
-  });
-}
-
-export function useRejectVendor() {
-  const { actor } = useActor();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (vendorId: string) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.rejectVendor(vendorId);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["vendorApprovalQueue"] });
     },
   });
 }
@@ -379,91 +380,300 @@ export function useGetPlatformStats() {
     queryKey: ["platformStats"],
     queryFn: async () => {
       if (!actor) return null;
-      return actor.getPlatformStats();
+      return toBackend(actor).getPlatformStats();
     },
     enabled: !!actor && !isFetching,
     refetchInterval: 30000,
   });
 }
 
-export function useGetFraudQueue() {
+export function useGetVendorStats() {
   const { actor, isFetching } = useActor();
   return useQuery({
-    queryKey: ["fraudQueue"],
+    queryKey: ["vendorStats"],
     queryFn: async () => {
-      if (!actor) return [];
-      return actor.getFraudQueue();
+      if (!actor) return null;
+      return toBackend(actor).getVendorStats();
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-export function useReviewFraudBooking() {
-  const { actor } = useActor();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ bookingId, approve }: { bookingId: string; approve: boolean }) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.reviewFraudBooking(bookingId, approve);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["fraudQueue"] });
-    },
-  });
-}
-
-export function useGetAuditLogs(startTime: Time, endTime: Time, actionType: ActionType | null) {
+export function useListAllUsers() {
   const { actor, isFetching } = useActor();
-  return useQuery({
-    queryKey: ["auditLogs", startTime.toString(), endTime.toString(), actionType],
+  return useQuery<User[]>({
+    queryKey: ["allUsers"],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getAuditLogs(startTime, endTime, actionType);
+      return toBackend(actor).listAllUsers();
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-export function useProcessRefund() {
+export function useApproveVendor() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ refundId, approve }: { refundId: string; approve: boolean }) => {
+    mutationFn: async (principal: import("@icp-sdk/core/principal").Principal) => {
       if (!actor) throw new Error("Actor not available");
-      return actor.processRefund(refundId, approve);
+      return toBackend(actor).approveVendor(principal);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["myBookings"] });
+      qc.invalidateQueries({ queryKey: ["allUsers"] });
     },
   });
 }
 
-// ─── Currency Config ──────────────────────────────────────────────────────────
-
-export function useGetCurrencyConfig(eventId: string) {
+export function useListFraudLogs() {
   const { actor, isFetching } = useActor();
-  return useQuery({
-    queryKey: ["currencyConfig", eventId],
+  return useQuery<FraudLog[]>({
+    queryKey: ["fraudLogs"],
     queryFn: async () => {
-      if (!actor || !eventId) return null;
-      return actor.getCurrencyConfig(eventId);
+      if (!actor) return [];
+      return toBackend(actor).listFraudLogs();
     },
-    enabled: !!actor && !isFetching && !!eventId,
+    enabled: !!actor && !isFetching,
   });
 }
 
-export function useSetCurrencyConfig() {
+export function useReviewFraudFlag() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (config: CurrencyConfig) => {
+    mutationFn: async ({ fraudLogId, clearFlag }: { fraudLogId: bigint; clearFlag: boolean }) => {
       if (!actor) throw new Error("Actor not available");
-      return actor.setCurrencyConfig(config);
+      return toBackend(actor).reviewFraudFlag(fraudLogId, clearFlag);
     },
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: ["currencyConfig", variables.eventId] });
-      qc.invalidateQueries({ queryKey: ["allEvents"] });
-      qc.invalidateQueries({ queryKey: ["myVendorEvents"] });
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["fraudLogs"] });
     },
   });
 }
+
+export function useListEscrowPayouts() {
+  const { actor, isFetching } = useActor();
+  return useQuery<EscrowPayout[]>({
+    queryKey: ["escrowPayouts"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return toBackend(actor).listEscrowPayouts();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useReleaseEscrowPayout() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ payoutId, adminNote }: { payoutId: bigint; adminNote: string }) => {
+      if (!actor) throw new Error("Actor not available");
+      return toBackend(actor).releaseEscrowPayout(payoutId, adminNote);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["escrowPayouts"] });
+    },
+  });
+}
+
+export function useRejectEscrowPayout() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ payoutId, adminNote }: { payoutId: bigint; adminNote: string }) => {
+      if (!actor) throw new Error("Actor not available");
+      return toBackend(actor).rejectEscrowPayout(payoutId, adminNote);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["escrowPayouts"] });
+    },
+  });
+}
+
+export function useRequestEscrowPayout() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (eventId: bigint) => {
+      if (!actor) throw new Error("Actor not available");
+      return toBackend(actor).requestEscrowPayout(eventId);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["escrowPayouts"] });
+    },
+  });
+}
+
+export function useListAuditLogs(
+  userActor: import("@icp-sdk/core/principal").Principal | null = null,
+  action: string | null = null,
+  startTime: bigint | null = null,
+  endTime: bigint | null = null,
+) {
+  const { actor, isFetching } = useActor();
+  return useQuery<AuditLog[]>({
+    queryKey: ["auditLogs", String(userActor), String(action), String(startTime), String(endTime)],
+    queryFn: async () => {
+      if (!actor) return [];
+      return toBackend(actor).listAuditLogs(userActor, action, startTime, endTime);
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetExchangeRates() {
+  const { actor, isFetching } = useActor();
+  return useQuery<ExchangeRates>({
+    queryKey: ["exchangeRates"],
+    queryFn: async () => {
+      if (!actor) return { inrToUsd: 0.012, inrToEur: 0.011, inrToAed: 0.044, inrToGbp: 0.0095 };
+      return toBackend(actor).getExchangeRates();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useSetExchangeRates() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ inrToUsd, inrToEur, inrToAed, inrToGbp }: {
+      inrToUsd: number; inrToEur: number; inrToAed: number; inrToGbp: number;
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      return toBackend(actor).setExchangeRates(inrToUsd, inrToEur, inrToAed, inrToGbp);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["exchangeRates"] });
+    },
+  });
+}
+
+// ─── AI Concierge ──────────────────────────────────────────────────────────────
+
+export function useCreateItinerary() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ eventId, destination, travelDates, services }: {
+      eventId: string | null;
+      destination: string;
+      travelDates: string;
+      services: string[];
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      return toBackend(actor).createItinerary(eventId, destination, travelDates, services);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["myItineraries"] });
+    },
+  });
+}
+
+export function useListMyItineraries() {
+  const { actor, isFetching } = useActor();
+  return useQuery<AIItineraryLog[]>({
+    queryKey: ["myItineraries"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return toBackend(actor).listMyItineraries();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// ─── Voting ────────────────────────────────────────────────────────────────────
+
+export function useVoteForArtist() {
+  const { actor } = useActor();
+  return useMutation({
+    mutationFn: async ({ artistName, category, region }: {
+      artistName: string;
+      category: string;
+      region: string;
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      return toBackend(actor).voteForArtist(artistName, category, region);
+    },
+  });
+}
+
+export function useGetLeaderboard(
+  region: string | null = null,
+  category: string | null = null,
+  limit: bigint = 100n,
+) {
+  const { actor, isFetching } = useActor();
+  return useQuery<VotingEntry[]>({
+    queryKey: ["leaderboard", String(region), String(category), String(limit)],
+    queryFn: async () => {
+      if (!actor) return [];
+      return toBackend(actor).getLeaderboard(region, category, limit);
+    },
+    enabled: !!actor && !isFetching,
+    refetchInterval: 60000,
+  });
+}
+
+// ─── Preloaded Profiles ───────────────────────────────────────────────────────
+
+export function useListPreloadedProfiles() {
+  const { actor, isFetching } = useActor();
+  return useQuery<PreloadedEventProfile[]>({
+    queryKey: ["preloadedProfiles"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return toBackend(actor).listPreloadedProfiles();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useCreatePreloadedProfile() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: {
+      eventId: string | null;
+      title: string;
+      eventType: EventType;
+      location: string;
+      basePriceINR: bigint;
+      bannerUrl: string;
+      promoVideoUrl: string;
+      isTop100Global: boolean;
+      isTop100India: boolean;
+      globalRank: bigint | null;
+      indiaRank: bigint | null;
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      return toBackend(actor).createPreloadedProfile(
+        args.eventId, args.title, args.eventType, args.location,
+        args.basePriceINR, args.bannerUrl, args.promoVideoUrl,
+        args.isTop100Global, args.isTop100India, args.globalRank, args.indiaRank
+      );
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["preloadedProfiles"] });
+    },
+  });
+}
+
+// ─── Stripe Session Status ────────────────────────────────────────────────────
+export function useGetStripeSessionStatus(sessionId: string | null) {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["stripeSessionStatus", sessionId],
+    queryFn: async () => {
+      if (!actor || !sessionId) return null;
+      return toBackend(actor).getStripeSessionStatus(sessionId);
+    },
+    enabled: !!actor && !isFetching && !!sessionId,
+    retry: 3,
+    retryDelay: 1500,
+  });
+}
+
+// ─── Legacy compat (keep for any old imports still around) ────────────────────
+export { useGetCallerUserProfile as useGetCallerProfile };

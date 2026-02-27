@@ -10,110 +10,132 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
-export type ActionType = { 'eventPublished' : null } |
-  { 'refundInitiated' : null } |
-  { 'paymentSucceeded' : null } |
-  { 'adminAction' : null } |
-  { 'bookingCreated' : null } |
-  { 'bookingConfirmed' : null } |
-  { 'userRegistered' : null } |
-  { 'vendorApproved' : null } |
-  { 'eventCreated' : null } |
-  { 'fraudHold' : null } |
-  { 'bookingCancelled' : null } |
-  { 'paymentFailed' : null };
-export interface AddEventArgs {
-  'id' : string,
-  'baseCurrency' : string,
-  'title' : string,
-  'country' : string,
-  'venue' : string,
-  'city' : string,
-  'tags' : Array<string>,
-  'description' : string,
-  'multiCurrencyEnabled' : boolean,
-  'coverImage' : string,
-  'vendorId' : string,
-  'category' : EventCategory,
-  'eventDate' : Time,
-  'supportedCurrencies' : Array<string>,
+export interface AIItineraryLog {
+  'id' : bigint,
+  'status' : AIItineraryStatus,
+  'eventId' : [] | [string],
+  'destination' : string,
+  'userId' : Principal,
+  'createdAt' : Time,
+  'travelDates' : string,
+  'itineraryData' : string,
+  'services' : Array<string>,
 }
-export type AppUserRole = { 'customer' : null } |
-  { 'superAdmin' : null } |
-  { 'vendor' : null };
+export type AIItineraryStatus = { 'cancelled' : null } |
+  { 'confirmed' : null } |
+  { 'draft' : null };
 export interface AuditLog {
-  'actionType' : ActionType,
-  'actorId' : string,
-  'timestamp' : Time,
+  'id' : bigint,
+  'action' : string,
+  'entityId' : string,
+  'timestamp' : bigint,
   'details' : string,
-  'targetId' : string,
+  'entityType' : string,
+  'userActor' : Principal,
 }
 export interface Booking {
-  'id' : string,
+  'id' : bigint,
   'status' : BookingStatus,
-  'eventId' : string,
-  'seatNumbers' : Array<bigint>,
-  'idempotencyKey' : string,
-  'ticketTypeId' : string,
-  'userId' : string,
-  'fraudScore' : bigint,
+  'eventId' : bigint,
+  'userId' : Principal,
   'createdAt' : Time,
-  'lockToken' : string,
-  'totalAmount' : bigint,
-  'notes' : [] | [string],
+  'confirmedAt' : [] | [bigint],
+  'cancelledAt' : [] | [bigint],
+  'ticketType' : TicketType,
+  'totalAmountINR' : bigint,
+  'currency' : string,
   'quantity' : bigint,
-  'stripeSessionId' : string,
-  'timeSlot' : [] | [string],
+  'seatLockId' : bigint,
+  'bookingToken' : string,
+  'stripeSessionId' : [] | [string],
 }
 export type BookingStatus = { 'cancelled' : null } |
   { 'pending' : null } |
   { 'refunded' : null } |
-  { 'confirmed' : null };
-export interface CurrencyConfig {
-  'eventId' : string,
-  'baseCurrency' : string,
-  'multiCurrencyEnabled' : boolean,
-  'updatedAt' : Time,
-  'supportedCurrencies' : Array<string>,
+  { 'confirmed' : null } |
+  { 'onHold' : null };
+export interface EscrowPayout {
+  'id' : bigint,
+  'status' : EscrowPayoutStatus,
+  'eventId' : bigint,
+  'processedAt' : [] | [bigint],
+  'adminNote' : [] | [string],
+  'vendorId' : Principal,
+  'amountINR' : bigint,
+  'requestedAt' : bigint,
 }
+export type EscrowPayoutStatus = { 'pending' : null } |
+  { 'released' : null } |
+  { 'rejected' : null };
 export interface Event {
-  'id' : string,
-  'status' : EventStatus,
+  'id' : bigint,
   'baseCurrency' : string,
   'title' : string,
-  'country' : string,
-  'venue' : string,
-  'city' : string,
+  'endDate' : Time,
+  'isPublished' : boolean,
+  'basePriceINR' : bigint,
+  'globalRank' : [] | [bigint],
   'createdAt' : Time,
   'tags' : Array<string>,
+  'isTop100India' : boolean,
   'description' : string,
   'multiCurrencyEnabled' : boolean,
-  'coverImage' : string,
-  'vendorId' : string,
-  'category' : EventCategory,
-  'eventDate' : Time,
+  'indiaRank' : [] | [bigint],
+  'totalSeats' : bigint,
+  'updatedAt' : Time,
+  'isTop100Global' : boolean,
+  'ticketType' : TicketType,
+  'availableSeats' : bigint,
+  'vendorId' : Principal,
+  'promoVideoUrl' : string,
+  'bannerUrl' : string,
+  'location' : string,
+  'startDate' : Time,
   'supportedCurrencies' : Array<string>,
+  'eventType' : EventType,
 }
-export type EventCategory = { 'concert' : null } |
+export type EventType = { 'dj' : null } |
   { 'workshop' : null } |
+  { 'modelingAssignment' : null } |
+  { 'musicFestival' : null } |
   { 'privateEvent' : null } |
   { 'conference' : null } |
-  { 'sports' : null };
-export type EventStatus = { 'cancelled' : null } |
-  { 'published' : null } |
-  { 'completed' : null } |
-  { 'draft' : null };
-export interface Refund {
-  'id' : string,
-  'status' : RefundStatus,
-  'bookingId' : string,
-  'createdAt' : Time,
-  'amount' : bigint,
-  'reason' : string,
+  { 'luxuryParty' : null } |
+  { 'sports' : null } |
+  { 'celebrity' : null };
+export interface ExchangeRates {
+  'inrToAed' : number,
+  'inrToEur' : number,
+  'inrToGbp' : number,
+  'inrToUsd' : number,
 }
-export type RefundStatus = { 'pending' : null } |
-  { 'rejected' : null } |
-  { 'processed' : null };
+export interface FraudLog {
+  'id' : bigint,
+  'flags' : Array<string>,
+  'status' : FraudStatus,
+  'bookingId' : bigint,
+  'userId' : Principal,
+  'createdAt' : Time,
+  'riskScore' : bigint,
+}
+export type FraudStatus = { 'autoHeld' : null } |
+  { 'cleared' : null } |
+  { 'flagged' : null };
+export interface PreloadedEventProfile {
+  'id' : bigint,
+  'eventId' : [] | [string],
+  'title' : string,
+  'basePriceINR' : bigint,
+  'globalRank' : [] | [bigint],
+  'isTop100India' : boolean,
+  'indiaRank' : [] | [bigint],
+  'isActive' : boolean,
+  'isTop100Global' : boolean,
+  'promoVideoUrl' : string,
+  'bannerUrl' : string,
+  'location' : string,
+  'eventType' : EventType,
+}
 export interface ShoppingItem {
   'productName' : string,
   'currency' : string,
@@ -129,17 +151,8 @@ export type StripeSessionStatus = {
     'completed' : { 'userPrincipal' : [] | [string], 'response' : string }
   } |
   { 'failed' : { 'error' : string } };
-export interface Ticket {
-  'id' : string,
-  'eventId' : string,
-  'baseCurrency' : string,
-  'availableQuantity' : bigint,
-  'name' : string,
-  'ticketType' : TicketType,
-  'price' : bigint,
-  'totalQuantity' : bigint,
-}
 export type TicketType = { 'numberedSeat' : null } |
+  { 'vipPackage' : null } |
   { 'generalAdmission' : null } |
   { 'timeSlot' : null };
 export type Time = bigint;
@@ -152,45 +165,28 @@ export interface TransformationOutput {
   'body' : Uint8Array,
   'headers' : Array<http_header>,
 }
-export interface UpdateEventArgs {
-  'id' : string,
-  'status' : EventStatus,
-  'baseCurrency' : string,
-  'title' : string,
-  'country' : string,
-  'venue' : string,
-  'city' : string,
-  'tags' : Array<string>,
-  'description' : string,
-  'multiCurrencyEnabled' : boolean,
-  'coverImage' : string,
-  'vendorId' : string,
-  'category' : EventCategory,
-  'eventDate' : Time,
-  'supportedCurrencies' : Array<string>,
-}
-export interface UserProfile {
-  'id' : string,
-  'status' : UserStatus,
-  'appRole' : AppUserRole,
+export interface User {
+  'isApproved' : boolean,
+  'principal' : Principal,
   'name' : string,
   'createdAt' : Time,
+  'role' : UserRole,
   'email' : string,
 }
 export type UserRole = { 'admin' : null } |
+  { 'customer' : null } |
+  { 'superAdmin' : null } |
+  { 'vendor' : null };
+export type UserRole__1 = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
-export type UserStatus = { 'active' : null } |
-  { 'suspended' : null };
-export type VendorApprovalStatus = { 'pending' : null } |
-  { 'approved' : null } |
-  { 'rejected' : null };
-export interface VendorProfile {
-  'userId' : string,
+export interface VotingEntry {
+  'id' : bigint,
+  'region' : string,
+  'voteCount' : bigint,
   'createdAt' : Time,
-  'businessName' : string,
-  'approvalStatus' : VendorApprovalStatus,
-  'totalRevenue' : bigint,
+  'category' : string,
+  'artistName' : string,
 }
 export interface http_header { 'value' : string, 'name' : string }
 export interface http_request_result {
@@ -200,70 +196,127 @@ export interface http_request_result {
 }
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
-  'activateUser' : ActorMethod<[Principal], undefined>,
-  'addEvent' : ActorMethod<[AddEventArgs], Event>,
-  'addTicket' : ActorMethod<[Ticket], Ticket>,
-  'approveVendor' : ActorMethod<[string], undefined>,
-  'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'cancelBooking' : ActorMethod<[string], undefined>,
-  'createBooking' : ActorMethod<[Booking], Booking>,
+  'approveVendor' : ActorMethod<[Principal], undefined>,
+  'assignCallerUserRole' : ActorMethod<[Principal, UserRole__1], undefined>,
+  'cancelBooking' : ActorMethod<[bigint], undefined>,
+  'confirmBooking' : ActorMethod<[bigint, string], undefined>,
+  'createBooking' : ActorMethod<[bigint, bigint, bigint, string], bigint>,
   'createCheckoutSession' : ActorMethod<
     [Array<ShoppingItem>, string, string],
     string
   >,
-  'createVendorProfile' : ActorMethod<[string], VendorProfile>,
-  'deleteEvent' : ActorMethod<[string], undefined>,
-  'deleteTicket' : ActorMethod<[string], undefined>,
-  'getAllEvents' : ActorMethod<[], Array<Event>>,
-  'getAllTickets' : ActorMethod<[], Array<Ticket>>,
-  'getAuditLogs' : ActorMethod<
-    [Time, Time, [] | [ActionType]],
-    Array<AuditLog>
+  'createEvent' : ActorMethod<
+    [
+      string,
+      string,
+      EventType,
+      string,
+      Time,
+      Time,
+      bigint,
+      Array<string>,
+      boolean,
+      bigint,
+      TicketType,
+      string,
+      string,
+      Array<string>,
+    ],
+    bigint
   >,
-  'getBookingById' : ActorMethod<[string], [] | [Booking]>,
-  'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
-  'getCallerUserRole' : ActorMethod<[], UserRole>,
-  'getCurrencyConfig' : ActorMethod<[string], [] | [CurrencyConfig]>,
-  'getEventById' : ActorMethod<[string], [] | [Event]>,
-  'getFraudQueue' : ActorMethod<[], Array<Booking>>,
-  'getMyBookings' : ActorMethod<[], Array<Booking>>,
-  'getMyVendorEvents' : ActorMethod<[], Array<Event>>,
-  'getMyVendorStats' : ActorMethod<
-    [],
-    {
-      'totalEvents' : bigint,
-      'totalBookings' : bigint,
-      'totalRevenue' : bigint,
-    }
+  'createItinerary' : ActorMethod<
+    [[] | [string], string, string, Array<string>],
+    bigint
+  >,
+  'createPreloadedProfile' : ActorMethod<
+    [
+      [] | [string],
+      string,
+      EventType,
+      string,
+      bigint,
+      string,
+      string,
+      boolean,
+      boolean,
+      [] | [bigint],
+      [] | [bigint],
+    ],
+    bigint
+  >,
+  'deleteEvent' : ActorMethod<[bigint], undefined>,
+  'getCallerUserProfile' : ActorMethod<[], [] | [User]>,
+  'getCallerUserRole' : ActorMethod<[], UserRole__1>,
+  'getEvent' : ActorMethod<[bigint], [] | [Event]>,
+  'getExchangeRates' : ActorMethod<[], ExchangeRates>,
+  'getItinerary' : ActorMethod<[bigint], [] | [AIItineraryLog]>,
+  'getLeaderboard' : ActorMethod<
+    [[] | [string], [] | [string], bigint],
+    Array<VotingEntry>
   >,
   'getPlatformStats' : ActorMethod<
     [],
     {
-      'confirmedBookings' : bigint,
+      'totalRevenueINR' : bigint,
+      'totalEvents' : bigint,
+      'totalBookings' : bigint,
+      'pendingEscrowPayouts' : bigint,
       'totalUsers' : bigint,
-      'totalRevenue' : bigint,
+      'activeFraudAlerts' : bigint,
       'totalVendors' : bigint,
-      'activeEvents' : bigint,
     }
   >,
   'getStripeSessionStatus' : ActorMethod<[string], StripeSessionStatus>,
-  'getTicketById' : ActorMethod<[string], [] | [Ticket]>,
-  'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
-  'getVendorApprovalQueue' : ActorMethod<[], Array<VendorProfile>>,
-  'getVendorProfile' : ActorMethod<[string], [] | [VendorProfile]>,
+  'getUserProfile' : ActorMethod<[Principal], [] | [User]>,
+  'getVendorStats' : ActorMethod<
+    [],
+    { 'bookingsCount' : bigint, 'revenueINR' : bigint, 'eventsCount' : bigint }
+  >,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isStripeConfigured' : ActorMethod<[], boolean>,
-  'processRefund' : ActorMethod<[string, boolean], undefined>,
-  'rejectVendor' : ActorMethod<[string], undefined>,
-  'requestRefund' : ActorMethod<[string, string], Refund>,
-  'reviewFraudBooking' : ActorMethod<[string, boolean], undefined>,
-  'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
-  'setCurrencyConfig' : ActorMethod<[CurrencyConfig], undefined>,
+  'listAllBookings' : ActorMethod<[], Array<Booking>>,
+  'listAllUsers' : ActorMethod<[], Array<User>>,
+  'listAuditLogs' : ActorMethod<
+    [[] | [Principal], [] | [string], [] | [bigint], [] | [bigint]],
+    Array<AuditLog>
+  >,
+  'listEscrowPayouts' : ActorMethod<[], Array<EscrowPayout>>,
+  'listFraudLogs' : ActorMethod<[], Array<FraudLog>>,
+  'listMyBookings' : ActorMethod<[], Array<Booking>>,
+  'listMyItineraries' : ActorMethod<[], Array<AIItineraryLog>>,
+  'listPreloadedProfiles' : ActorMethod<[], Array<PreloadedEventProfile>>,
+  'listPublishedEvents' : ActorMethod<
+    [
+      [] | [EventType],
+      [] | [string],
+      [] | [bigint],
+      [] | [bigint],
+      [] | [boolean],
+      [] | [boolean],
+    ],
+    Array<Event>
+  >,
+  'lockSeat' : ActorMethod<[bigint, [] | [string]], string>,
+  'publishEvent' : ActorMethod<[bigint], undefined>,
+  'registerUser' : ActorMethod<[string, string, UserRole], undefined>,
+  'rejectEscrowPayout' : ActorMethod<[bigint, string], undefined>,
+  'releaseEscrowPayout' : ActorMethod<[bigint, string], undefined>,
+  'requestEscrowPayout' : ActorMethod<[bigint], bigint>,
+  'reviewFraudFlag' : ActorMethod<[bigint, boolean], undefined>,
+  'saveCallerUserProfile' : ActorMethod<[string, string], undefined>,
+  'setEventTop100' : ActorMethod<
+    [bigint, boolean, boolean, [] | [bigint], [] | [bigint]],
+    undefined
+  >,
+  'setExchangeRates' : ActorMethod<[number, number, number, number], undefined>,
   'setStripeConfiguration' : ActorMethod<[StripeConfiguration], undefined>,
-  'suspendUser' : ActorMethod<[Principal], undefined>,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
-  'updateEvent' : ActorMethod<[UpdateEventArgs], Event>,
-  'updateTicket' : ActorMethod<[Ticket], Ticket>,
+  'unpublishEvent' : ActorMethod<[bigint], undefined>,
+  'updateEvent' : ActorMethod<
+    [bigint, string, string, string, bigint, string, string, Array<string>],
+    undefined
+  >,
+  'voteForArtist' : ActorMethod<[string, string, string], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];
